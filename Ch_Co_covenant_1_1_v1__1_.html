@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHROMATIC COVENANT</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:        #0D1620;
+      --screen-bg: #0A0E18;
+      --primary:   #457B9D;
+      --accent:    #2A9D8F;
+      --highlight: #64B5F6;
+      --text:      #C8E5F7;
+      --muted:     #6B8FA0;
+      --bevel-light: #5BA3C8;
+      --bevel-dark:  #1A2F45;
+      --bevel-mid:   #2E4A6F;
+      --warm:  #E8A04A;
+      --cold:  #4A5A6A;
+      --scanline: rgba(0,0,0,0.15);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      overflow-x: hidden;
+      padding: 1.5rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 40%, rgba(69,123,157,0.1) 0%, transparent 70%),
+        radial-gradient(ellipse 30% 40% at 20% 80%, rgba(42,157,143,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── MONITOR ── */
+    .monitor {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 860px;
+      background: var(--bevel-mid);
+      border-radius: 18px 18px 22px 22px;
+      padding: 18px 20px 22px;
+      box-shadow:
+        0 0 40px rgba(69,123,157,0.5),
+        0 0 80px rgba(69,123,157,0.2),
+        inset 4px 4px 0 var(--bevel-light),
+        inset -4px -4px 0 var(--bevel-dark),
+        inset 8px 8px 0 rgba(100,181,246,0.15),
+        inset -8px -8px 0 rgba(26,47,69,0.4);
+    }
+
+    .monitor-brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px 10px;
+      border-bottom: 2px solid var(--bevel-dark);
+      margin-bottom: 12px;
+    }
+
+    .brand-name {
+      font-family: 'VT323', monospace;
+      font-size: 1.1rem;
+      color: var(--bevel-light);
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 8px var(--primary);
+    }
+
+    .brand-dots { display: flex; gap: 6px; }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--bevel-dark);
+    }
+    .dot:nth-child(1) { background: #FF6B35; box-shadow: 0 0 4px #FF6B35; }
+    .dot:nth-child(2) { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+    .dot:nth-child(3) { background: var(--highlight); box-shadow: 0 0 4px var(--highlight); }
+
+    /* ── SCREEN ── */
+    .screen {
+      position: relative;
+      background: var(--screen-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+      box-shadow:
+        inset 3px 3px 8px rgba(0,0,0,0.8),
+        inset -2px -2px 4px rgba(69,123,157,0.1),
+        0 0 0 3px var(--bevel-dark),
+        0 0 0 5px var(--bevel-mid);
+    }
+
+    .screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        var(--scanline) 0px, var(--scanline) 1px,
+        transparent 1px, transparent 3px
+      );
+      pointer-events: none;
+      z-index: 10;
+      border-radius: 8px;
+    }
+
+    .screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 60%, rgba(0,0,0,0.35) 100%);
+      pointer-events: none;
+      z-index: 9;
+      border-radius: 8px;
+    }
+
+    /* ── TITLE BLOCK ── */
+    .title-block {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .title-main {
+      font-family: 'VT323', monospace;
+      font-size: 3.5rem;
+      color: var(--highlight);
+      text-shadow:
+        0 0 20px var(--primary),
+        0 0 40px rgba(69,123,157,0.5),
+        0 0 80px rgba(69,123,157,0.2);
+      letter-spacing: 0.12em;
+      line-height: 1;
+    }
+
+    .title-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-top: 0.4rem;
+    }
+
+    .title-divider {
+      width: 60%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      margin: 1rem auto 0;
+      box-shadow: 0 0 8px var(--primary);
+    }
+
+    /* ── ROSTER GRID ── */
+    .roster {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 0.5rem;
+      padding: 1.5rem 1rem 1rem;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 2;
+      flex: 1;
+    }
+
+    .char-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      width: 120px;
+    }
+
+    .char-portrait-wrap {
+      width: 100px;
+      height: 160px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .char-portrait-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      object-position: bottom;
+      filter: drop-shadow(0 0 8px rgba(69,123,157,0.4));
+      transition: filter 0.5s ease, transform 0.5s ease;
+    }
+
+    .char-portrait-wrap img.state-warm {
+      filter: drop-shadow(0 0 10px rgba(232,160,74,0.6));
+    }
+    .char-portrait-wrap img.state-cold {
+      filter: drop-shadow(0 0 6px rgba(74,90,106,0.4)) grayscale(0.3);
+    }
+    .char-portrait-wrap img.state-neutral {
+      filter: drop-shadow(0 0 8px rgba(69,123,157,0.4));
+    }
+
+    /* Placeholder for unplayed characters */
+    .char-placeholder {
+      width: 80px;
+      height: 140px;
+      border: 1px dashed rgba(69,123,157,0.3);
+      border-radius: 4px;
+      background: rgba(69,123,157,0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.6rem;
+      color: rgba(107,143,160,0.5);
+      letter-spacing: 0.1em;
+      line-height: 1.4;
+    }
+
+    .char-name-tag {
+      font-family: 'VT323', monospace;
+      font-size: 1rem;
+      color: var(--text);
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-shadow: 0 0 8px var(--primary);
+    }
+
+    .char-status {
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 2px;
+      border: 1px solid;
+    }
+
+    .char-status.warm  { color: var(--warm); border-color: var(--warm); text-shadow: 0 0 6px var(--warm); }
+    .char-status.cold  { color: var(--cold); border-color: var(--cold); }
+    .char-status.neutral { color: var(--accent); border-color: var(--accent); text-shadow: 0 0 6px var(--accent); }
+    .char-status.unplayed { color: var(--muted); border-color: rgba(107,143,160,0.3); }
+
+    /* ── BOTTOM BAR ── */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 1rem;
+      border-top: 1px solid rgba(69,123,157,0.2);
+      background: rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    .bottom-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+    }
+
+    .start-btn {
+      font-family: 'VT323', monospace;
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      background: transparent;
+      border: 1px solid var(--accent);
+      padding: 0.3rem 1.2rem;
+      cursor: pointer;
+      border-radius: 2px;
+      text-shadow: 0 0 8px var(--accent);
+      box-shadow: 0 0 10px rgba(42,157,143,0.2);
+      transition: all 0.2s ease;
+    }
+
+    .start-btn:hover {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 0 20px rgba(42,157,143,0.5);
+      text-shadow: none;
+    }
+
+    .monitor-base {
+      width: 65%;
+      height: 14px;
+      margin: 0 auto;
+      background: var(--bevel-mid);
+      box-shadow:
+        inset 2px 2px 0 var(--bevel-light),
+        inset -2px -2px 0 var(--bevel-dark),
+        0 6px 0 rgba(26,47,69,0.6),
+        0 0 20px rgba(69,123,157,0.3);
+      border-radius: 0 0 6px 6px;
+    }
+
+    /* debug panel */
+    .debug-panel {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      background: rgba(0,0,0,0.8);
+      border: 1px solid rgba(69,123,157,0.3);
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      z-index: 100;
+      line-height: 1.8;
+    }
+
+    .debug-panel button {
+      display: block;
+      width: 100%;
+      margin-top: 0.3rem;
+      padding: 0.2rem;
+      background: transparent;
+      border: 1px solid rgba(69,123,157,0.3);
+      color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+    }
+    .debug-panel button:hover { border-color: var(--accent); color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<div class="monitor">
+  <div class="monitor-brand">
+    <span class="brand-name">CHROMATIC COVENANT // TITLE SCREEN v0.1</span>
+    <div class="brand-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <div class="screen">
+
+    <div class="title-block">
+      <div class="title-main">CHROMATIC COVENANT</div>
+      <div class="title-sub">A Polyscript Dating Simulation · Arc 1</div>
+      <div class="title-divider"></div>
+    </div>
+
+    <div class="roster" id="roster"></div>
+
+    <div class="bottom-bar">
+      <span class="bottom-label">SELECT A CHARACTER TO BEGIN</span>
+      <button class="start-btn" onclick="alert('Scene select coming soon.')">▶ ENTER</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="monitor-base"></div>
+
+<!-- Debug panel — remove in prod -->
+<div class="debug-panel">
+  DEV: SET THIAGO STATE
+  <button onclick="setDebugState('thiago', 'warm')">WARM</button>
+  <button onclick="setDebugState('thiago', 'neutral')">NEUTRAL</button>
+  <button onclick="setDebugState('thiago', 'cold')">COLD</button>
+  <button onclick="setDebugState('thiago', null)">UNPLAYED</button>
+</div>
+
+<script>
+  // ── CHARACTER ROSTER ─────────────────────────────────────────────────────────
+  // Each character has a key that matches what the dialogue scene writes to localStorage
+  // Images: [warm, neutral, cold] — use same image as standin where needed
+
+  const roster = [
+    {
+      key: "thiago",
+      name: "THIAGO",
+      images: {
+        warm:    "thiago-warm.png",
+        neutral: "thiago-warm.png",   // standin — same image for now
+        cold:    "thiago-cold.png"
+      }
+    },
+    {
+      key: "char_02",
+      name: "CHAR 02",
+      desc: "MAGENTA HAIR\nCAT TAIL\nPURPLE BOOTS",
+      images: {
+        warm:    "char-magenta-a.png",
+        neutral: "char-magenta-b.png",
+        cold:    "char-magenta-b.png"
+      }
+    },
+    {
+      key: "char_03",
+      name: "CHAR 03",
+      desc: "GREEN HAIR\nRED PATTERNS\nGREY BOOTS",
+      images: {
+        warm:    "char-green-a.png",
+        neutral: "char-green-b.png",
+        cold:    "char-green-b.png"
+      }
+    },
+    {
+      key: "char_04",
+      name: "CHAR 04",
+      desc: "CYAN CHARACTER\nYELLOW HAIR\nSEA TAIL",
+      images: {
+        warm:    "char-cyan-a.png",
+        neutral: "char-cyan-b.png",
+        cold:    "char-cyan-b.png"
+      }
+    },
+    {
+      key: "char_05",
+      name: "MATEO",
+      desc: "CYAN AFRO\nDEER SPOTS\nPINK SHOES",
+      images: {
+        warm:    "mateo-warm.png",
+        neutral: "mateo-neutral.png",
+        cold:    "mateo-neutral.png"
+      }
+    },
+    {
+      key: "char_06",
+      name: "CHAR 06",
+      desc: "ART PENDING",
+      images: null
+    }
+  ];
+
+  // ── STATE ─────────────────────────────────────────────────────────────────────
+  // Dialogue scenes write: localStorage.setItem('cc_' + charKey + '_ending', 'WARM'|'NEUTRAL'|'COLD')
+
+  function getState(key) {
+    const val = localStorage.getItem('cc_' + key + '_ending');
+    if (!val) return null;
+    return val.toLowerCase(); // 'warm', 'neutral', 'cold'
+  }
+
+  // ── RENDER ────────────────────────────────────────────────────────────────────
+  function renderRoster() {
+    const container = document.getElementById('roster');
+    container.innerHTML = '';
+
+    roster.forEach(char => {
+      const state = getState(char.key);
+      const slot = document.createElement('div');
+      slot.className = 'char-slot';
+
+      const wrap = document.createElement('div');
+      wrap.className = 'char-portrait-wrap';
+
+      if (!char.images) {
+        // No art at all
+        const ph = document.createElement('div');
+        ph.className = 'char-placeholder';
+        ph.textContent = char.desc || 'ART\nPENDING';
+        wrap.appendChild(ph);
+      } else if (!state) {
+        // Has art but not yet played — show placeholder
+        const ph = document.createElement('div');
+        ph.className = 'char-placeholder';
+        ph.textContent = char.desc ? char.desc : '?';
+        wrap.appendChild(ph);
+      } else {
+        // Has a state — show the right image
+        const img = document.createElement('img');
+        img.src = char.images[state] || char.images.neutral;
+        img.alt = char.name;
+        img.className = 'state-' + state;
+        wrap.appendChild(img);
+      }
+
+      const nameTag = document.createElement('div');
+      nameTag.className = 'char-name-tag';
+      nameTag.textContent = char.name;
+
+      const statusTag = document.createElement('div');
+      statusTag.className = 'char-status ' + (state || 'unplayed');
+      statusTag.textContent = state ? state.toUpperCase() : 'NOT MET';
+
+      slot.appendChild(wrap);
+      slot.appendChild(nameTag);
+      slot.appendChild(statusTag);
+      container.appendChild(slot);
+    });
+  }
+
+  // ── DEBUG HELPERS ─────────────────────────────────────────────────────────────
+  function setDebugState(key, state) {
+    if (state === null) {
+      localStorage.removeItem('cc_' + key + '_ending');
+    } else {
+      localStorage.setItem('cc_' + key + '_ending', state.toUpperCase());
+    }
+    renderRoster();
+  }
+
+  // ── INIT ──────────────────────────────────────────────────────────────────────
+  renderRoster();
+</script>
+</body>
+</html>
