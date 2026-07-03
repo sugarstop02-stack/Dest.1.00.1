@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CORVID NET // Terminal Access</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap');
+
+*,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
+
+:root{
+  --bg:        #07070b;
+  --panel:     #0e0e15;
+  --panel2:    #121220;
+  --line:      #22222e;
+  --text:      #d6d6e2;
+  --muted:     #6b6b7d;
+  --mono:      'Share Tech Mono', monospace;
+  --display:   'Bebas Neue', sans-serif;
+
+  --cyan:      #4fd8e3;   /* Baqaya */
+  --magenta:   #e34fcf;   /* Âcre */
+  --amber:     #e3b74f;   /* Dulzor */
+  --red:       #e35f4f;   /* Semper */
+  --blue:      #4f7ee3;   /* Saudade */
+  --green:     #6fe34f;   /* Icchha */
+}
+
+html,body{ height:100%; background:var(--bg); color:var(--text); font-family:var(--mono); overflow:hidden; }
+
+/* ───────── scanline / vignette atmosphere ───────── */
+#scan{
+  position:fixed; inset:0; pointer-events:none; z-index:80;
+  background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,0.25) 3px);
+  mix-blend-mode:multiply;
+}
+#vignette{ position:fixed; inset:0; pointer-events:none; z-index:79; box-shadow:inset 0 0 180px rgba(0,0,0,0.9); }
+
+/* ───────── BOOT SEQUENCE ───────── */
+#boot{
+  position:fixed; inset:0; z-index:100; background:#000;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:40px clamp(20px,8vw,120px);
+  font-size:12px; letter-spacing:1px; line-height:1.9;
+  color:var(--green); text-shadow:0 0 6px rgba(111,227,79,0.35);
+}
+#boot .line{ opacity:0; animation:reveal .15s forwards; white-space:pre; }
+#boot .line .ok{ color:var(--cyan); }
+#boot .skip{
+  position:absolute; bottom:30px; right:clamp(20px,8vw,120px);
+  font-size:10px; color:var(--muted); letter-spacing:2px; cursor:pointer; border:1px solid var(--line); padding:8px 14px;
+}
+#boot .skip:hover{ color:var(--text); border-color:var(--muted); }
+@keyframes reveal{ to{ opacity:1; } }
+
+/* ───────── DESKTOP ───────── */
+#desktop{ height:100%; display:flex; flex-direction:column; opacity:0; transition:opacity .6s ease; }
+#desktop.show{ opacity:1; }
+
+.topbar{
+  display:flex; align-items:center; gap:14px;
+  padding:12px 20px; border-bottom:1px solid var(--line); background:var(--panel);
+}
+.brand{ font-family:var(--display); font-size:20px; letter-spacing:3px; color:var(--text); white-space:nowrap; }
+.brand span{ color:var(--cyan); }
+.addrbar{
+  flex:1; display:flex; align-items:center; gap:8px;
+  background:var(--bg); border:1px solid var(--line); padding:8px 14px; font-size:12px; color:var(--muted);
+}
+.addrbar .proto{ color:var(--cyan); }
+.addrbar #addrText{ color:var(--text); letter-spacing:0.5px; }
+.topbtn{
+  background:none; border:1px solid var(--line); color:var(--text);
+  font-family:var(--mono); font-size:11px; letter-spacing:1px; padding:8px 14px; cursor:pointer;
+}
+.topbtn:hover{ border-color:var(--cyan); color:var(--cyan); }
+.topbtn:disabled{ color:var(--line); border-color:var(--line); cursor:not-allowed; }
+
+.body{ flex:1; min-height:0; position:relative; }
+
+/* ── home grid ── */
+#home{
+  height:100%; overflow-y:auto; padding:34px clamp(16px,5vw,60px) 60px;
+}
+#home::-webkit-scrollbar{ width:8px; }
+#home::-webkit-scrollbar-thumb{ background:var(--line); }
+.homeHead{ margin-bottom:26px; }
+.homeHead .eyebrow{ font-size:10px; letter-spacing:5px; color:var(--muted); margin-bottom:8px; }
+.homeHead h1{ font-family:var(--display); font-size:clamp(30px,5vw,48px); letter-spacing:3px; color:var(--text); }
+
+.category{ margin-bottom:34px; }
+.category .catLabel{
+  font-size:10px; letter-spacing:4px; color:var(--muted); margin-bottom:12px;
+  display:flex; align-items:center; gap:10px;
+}
+.category .catLabel::after{ content:''; flex:1; height:1px; background:var(--line); }
+
+.grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:14px; }
+.tile{
+  position:relative; background:var(--panel); border:1px solid var(--line); padding:16px;
+  cursor:pointer; transition:border-color .15s ease, transform .15s ease; overflow:hidden;
+}
+.tile:hover{ transform:translateY(-2px); }
+.tile::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--accent,var(--cyan));
+  box-shadow:0 0 10px var(--accent,var(--cyan));
+}
+.tile .dom{ font-size:10px; letter-spacing:1.5px; color:var(--accent,var(--cyan)); margin-bottom:8px; word-break:break-all; }
+.tile .name{ font-family:var(--display); font-size:19px; letter-spacing:1px; color:var(--text); margin-bottom:6px; }
+.tile .desc{ font-size:10.5px; color:var(--muted); line-height:1.5; }
+.tile:hover{ border-color:var(--accent,var(--cyan)); }
+
+/* ── viewer ── */
+#viewer{ position:absolute; inset:0; display:none; }
+#viewer.show{ display:block; }
+#viewer iframe{ width:100%; height:100%; border:none; background:#000; }
+
+footer{
+  border-top:1px solid var(--line); padding:8px 20px; font-size:9px; color:var(--muted);
+  display:flex; justify-content:space-between; letter-spacing:1px; background:var(--panel);
+}
+
+@media (max-width:700px){
+  .brand{ display:none; }
+  .grid{ grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="scan"></div>
+<div id="vignette"></div>
+
+<div id="boot">
+  <div id="bootLines"></div>
+  <div class="skip" id="skipBoot">SKIP // ENTER NET</div>
+</div>
+
+<div id="desktop">
+  <div class="topbar">
+    <div class="brand">CORVID<span>NET</span></div>
+    <button class="topbtn" id="btnHome">⌂ HOME</button>
+    <div class="addrbar"><span class="proto">net://</span><span id="addrText">home</span></div>
+  </div>
+  <div class="body">
+    <div id="home"></div>
+    <div id="viewer"><iframe id="frame" title="node viewer"></iframe></div>
+  </div>
+  <footer>
+    <span>CORVID NET // SIGNAL RELAY ACTIVE</span>
+    <span id="nodeCount">0 NODES INDEXED</span>
+  </footer>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────
+   NODE REGISTRY — edit this list to add/rename/re-sort sites.
+   file   : relative filename sitting next to this index.html
+   dom    : the fake "address" shown in the address bar / tile
+   name   : display title on the tile
+   desc   : one-line description
+   accent : one of cyan / magenta / amber / red / blue / green
+   cat    : grouping label used as a section header on the home screen
+   ───────────────────────────────────────────────────────── */
+const NODES = [
+  { file:"Cu_Co_transmission_1_1_v1.html", dom:"transmission.cuerv.io", name:"Incoming Transmission", desc:"CUERV.IO signal intercept — start here.", accent:"amber", cat:"SIGNAL" },
+  { file:"Co_Co_os_1_1_v1.html",           dom:"os.corvid.net",        name:"Corvid.OS", desc:"Desktop shell / system view.", accent:"cyan", cat:"SIGNAL" },
+  { file:"Co_Co_feed_1_1_v1.html",         dom:"feed.dulzor.net",      name:"Dulzor Feed", desc:"Social feed — live posts + threads.", accent:"amber", cat:"SIGNAL" },
+  { file:"Co_Co_copie_1_1_v1.html",        dom:"copie.corvid.net",     name:"COPIE", desc:"Companion Operating Personal Intelligence Engine.", accent:"cyan", cat:"SIGNAL" },
+  { file:"Co_Co_timed_1_1_v1.html",        dom:"exam.copie.net",       name:"COPIE — Oral Exam", desc:"Timed COPIE session.", accent:"cyan", cat:"SIGNAL" },
+  { file:"In_Co_index_1_1_v1.html",        dom:"live.carlina.net",     name:"Live Feed", desc:"Show title / live broadcast index.", accent:"red", cat:"CARLINA CARDENAS" },
+  { file:"Ca_Co_pmmr_1_1_v1.html",         dom:"pmmr.carlina.net",     name:"Carlina Cardenas — PMMR", desc:"Working Towards a Unified Future.", accent:"red", cat:"CARLINA CARDENAS" },
+  { file:"In_Co_launch2_1_1_v1.html",      dom:"launch.carlina.net",   name:"Carlina Cardenas — Launch", desc:"Launch-day build.", accent:"red", cat:"CARLINA CARDENAS" },
+  { file:"In_Co_24_1_1_v1.html",           dom:"archive.carlina.net",  name:"Carlina Cardenas — Archive", desc:"Full data archive build (large).", accent:"red", cat:"CARLINA CARDENAS" },
+  { file:"Ch_Co_covenant_1_1_v1__1_.html", dom:"chromaticcovenant.net", name:"Chromatic Covenant", desc:"Faction overview.", accent:"magenta", cat:"CHROMATIC COVENANT" },
+  { file:"Ch_Co_covenant_1_1_v1.html",     dom:"session.chromaticcovenant.net", name:"Thiago Carvalho — Polyscript Session", desc:"Dating sim / character session.", accent:"magenta", cat:"CHROMATIC COVENANT" },
+  { file:"Ch_Co_wheel_1_1_v1.html",        dom:"wheel.cheesewheel.net", name:"Cheese Wheel Chat", desc:"System chat interface.", accent:"green", cat:"CHROMATIC COVENANT" },
+  { file:"Po_Co_complete_1_1_v1.html",     dom:"workbook.polyscript.net", name:"Polyscript — Workbook", desc:"Complete language workbook.", accent:"blue", cat:"POLYSCRIPT" },
+  { file:"Po_Co_fixed_1_1_v1.html",        dom:"kdp.polyscript.net",   name:"Polyscript — KDP Edition", desc:"Print-ready workbook edition.", accent:"blue", cat:"POLYSCRIPT" },
+  { file:"Fl_Co_pink_1_1_v1.html",         dom:"flyer.polyscript.net", name:"Summer Sessions Flyer", desc:"Promo flyer.", accent:"blue", cat:"POLYSCRIPT" },
+  { file:"Da_Co_sim_1_1_v1.html",          dom:"peek.dulzor.net",      name:"Peek UI", desc:"Phone / peek simulator.", accent:"amber", cat:"TOOLS" },
+  { file:"Ca_Co_console_1_1_v1.html",      dom:"callsign.corvid.net",  name:"Callsign Console", desc:"File pipeline / renaming console.", accent:"green", cat:"TOOLS" },
+];
+
+const bootEl = document.getElementById('bootLines');
+const bootLog = [
+  "CORVID NET :: DIAL-UP HANDSHAKE.......... OK",
+  "RESOLVING SIGNAL RELAY.................... OK",
+  ...NODES.map(n => `LOCATING NODE  ${n.dom.padEnd(28,'.')} <span class="ok">FOUND</span>`),
+  `${NODES.length} NODES INDEXED. LINK ESTABLISHED.`,
+];
+let i=0;
+function typeBoot(){
+  if(i>=bootLog.length){ setTimeout(enterNet, 500); return; }
+  const div = document.createElement('div');
+  div.className='line';
+  div.innerHTML = bootLog[i];
+  bootEl.appendChild(div);
+  i++;
+  setTimeout(typeBoot, i<3?180:55);
+}
+typeBoot();
+document.getElementById('skipBoot').addEventListener('click', enterNet);
+
+function enterNet(){
+  document.getElementById('boot').style.display='none';
+  document.getElementById('desktop').classList.add('show');
+}
+
+/* ── build home grid ── */
+const home = document.getElementById('home');
+home.innerHTML = `<div class="homeHead"><div class="eyebrow">NET // HOME</div><h1>Select a node</h1></div>`;
+const byCat = {};
+NODES.forEach(n=>{ (byCat[n.cat] = byCat[n.cat]||[]).push(n); });
+Object.keys(byCat).forEach(cat=>{
+  const section = document.createElement('div');
+  section.className='category';
+  section.innerHTML = `<div class="catLabel">${cat}</div><div class="grid"></div>`;
+  const grid = section.querySelector('.grid');
+  byCat[cat].forEach(n=>{
+    const tile = document.createElement('div');
+    tile.className='tile';
+    tile.style.setProperty('--accent', `var(--${n.accent})`);
+    tile.innerHTML = `<div class="dom">${n.dom}</div><div class="name">${n.name}</div><div class="desc">${n.desc}</div>`;
+    tile.addEventListener('click', ()=> openNode(n));
+    grid.appendChild(tile);
+  });
+  home.appendChild(section);
+});
+document.getElementById('nodeCount').textContent = `${NODES.length} NODES INDEXED`;
+
+/* ── navigation ── */
+const viewer = document.getElementById('viewer');
+const frame = document.getElementById('frame');
+const addrText = document.getElementById('addrText');
+
+function openNode(n){
+  addrText.textContent = n.dom;
+  frame.src = n.file;
+  home.style.display='none';
+  viewer.classList.add('show');
+}
+function goHome(){
+  addrText.textContent = 'home';
+  viewer.classList.remove('show');
+  frame.src = '';
+  home.style.display='block';
+}
+document.getElementById('btnHome').addEventListener('click', goHome);
+</script>
+</body>
+</html>
