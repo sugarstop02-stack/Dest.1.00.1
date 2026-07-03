@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Polyscript Summer Sessions Flyer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Space+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f5f0e8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Space Mono', monospace;
+  }
+
+  .page {
+    width: 8.5in;
+    height: 11in;
+    background: #ffd6e7;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  /* HALFTONE BG */
+  .halftone {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, #c2006e 1px, transparent 1px);
+    background-size: 18px 18px;
+    opacity: 0.12;
+    z-index: 0;
+  }
+
+  /* SPRAY PAINT SPLATTERS */
+  .splat {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.22;
+    z-index: 1;
+  }
+  .splat-1 { width: 420px; height: 420px; background: #ff2d78; top: -100px; left: -80px; }
+  .splat-2 { width: 350px; height: 350px; background: #ff85c0; bottom: 100px; right: -60px; }
+  .splat-3 { width: 280px; height: 280px; background: #c2006e; top: 320px; right: 60px; opacity: 0.18; }
+  .splat-4 { width: 260px; height: 260px; background: #ff2d78; bottom: -50px; left: 180px; }
+
+  /* ANGLED PANEL - top */
+  .panel-top {
+    position: absolute;
+    top: 12px; left: 12px; right: 12px;
+    height: 300px;
+    background: #111;
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 0 100%);
+    z-index: 2;
+  }
+
+  /* PANEL LINES */
+  .panel-line-1 {
+    position: absolute;
+    top: 280px; left: -10px; right: -10px;
+    height: 6px;
+    background: #111;
+    transform: rotate(-3deg);
+    z-index: 10;
+  }
+  .panel-line-2 {
+    position: absolute;
+    top: 292px; left: -10px; right: -10px;
+    height: 3px;
+    background: #ff2d78;
+    transform: rotate(-3deg);
+    z-index: 10;
+  }
+
+  /* HEY text */
+  .hey {
+    position: absolute;
+    top: 30px;
+    left: 40px;
+    font-family: 'Bangers', cursive;
+    font-size: 160px;
+    color: #ff2d78;
+    letter-spacing: 8px;
+    line-height: 1;
+    z-index: 5;
+    -webkit-text-stroke: 3px #ff2d78;
+    filter: drop-shadow(6px 6px 0px #000);
+    transform: rotate(-2deg);
+  }
+
+  .neighbor {
+    position: absolute;
+    top: 155px;
+    left: 50px;
+    font-family: 'Bangers', cursive;
+    font-size: 110px;
+    color: #ffd6e7;
+    letter-spacing: 6px;
+    line-height: 1;
+    z-index: 5;
+    -webkit-text-stroke: 2px #ffd6e7;
+    filter: drop-shadow(4px 4px 0px #000);
+    transform: rotate(-1deg);
+  }
+
+  /* ACCENT DOT cluster */
+  .dot-cluster {
+    position: absolute;
+    top: 60px;
+    right: 60px;
+    z-index: 6;
+  }
+  .dot-cluster span {
+    display: block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    margin: 6px;
+  }
+  .d1 { background: #ff85c0; margin-left: 20px !important; }
+  .d2 { background: #c2006e; margin-left: 5px !important; }
+  .d3 { background: #ff2d78; margin-left: 30px !important; }
+  .d4 { background: #ff85c0; margin-left: 12px !important; }
+
+  /* MAIN BODY */
+  .body-section {
+    position: absolute;
+    top: 355px;
+    left: 0; right: 0;
+    padding: 20px 50px 0 50px;
+    z-index: 5;
+  }
+
+  .someone-line {
+    font-family: 'Bangers', cursive;
+    font-size: 50px;
+    color: #111;
+    letter-spacing: 3px;
+    line-height: 1.1;
+    transform: rotate(-1deg);
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+
+  .someone-line em {
+    color: #c2006e;
+    font-style: normal;
+    -webkit-text-stroke: 1px #111;
+  }
+
+  /* TAG STRIPE */
+  .tag-stripe {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    background: #ff85c0;
+    padding: 10px 50px;
+    border-bottom: 3px solid #111;
+    z-index: 8;
+  }
+  .tag-stripe p {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* MIDDLE INFO */
+  .mid-section {
+    position: absolute;
+    top: 555px;
+    left: 50px; right: 50px;
+    z-index: 5;
+  }
+
+  .what-we-want {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .bullet {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .bullet-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+    border: 2px solid #111;
+  }
+  .bd-pink   { background: #ff2d78; }
+  .bd-deep   { background: #c2006e; }
+  .bd-light  { background: #ff85c0; }
+
+  .bullet p {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    letter-spacing: 1px;
+    line-height: 1.5;
+    text-transform: uppercase;
+  }
+
+  /* DETAILS BOX */
+  .details-box {
+    position: absolute;
+    top: 720px;
+    left: 50px; right: 50px;
+    z-index: 7;
+    background: #111;
+    padding: 18px 24px;
+    transform: rotate(-0.5deg);
+    border-left: 6px solid #ff2d78;
+  }
+
+  .details-box p {
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffd6e7;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  .details-box span {
+    color: #ff85c0;
+  }
+
+  /* BIG DIAGONAL URL SECTION */
+  .url-block {
+    position: absolute;
+    bottom: 130px;
+    left: 0; right: 0;
+    z-index: 7;
+  }
+
+  .url-bg {
+    background: #c2006e;
+    padding: 22px 50px;
+    transform: rotate(1deg);
+    border-top: 5px solid #111;
+    border-bottom: 5px solid #111;
+    position: relative;
+  }
+
+  .find-us {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #ffd6e7;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .url-text {
+    font-family: 'Bangers', cursive;
+    font-size: 24px;
+    color: #fff;
+    letter-spacing: 2px;
+    word-break: break-all;
+    line-height: 1.3;
+  }
+
+  .url-text span {
+    color: #ffd6e7;
+  }
+
+  /* BOTTOM STRIP */
+  .bottom-strip {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 110px;
+    background: #111;
+    clip-path: polygon(0 30%, 100% 0, 100% 100%, 0 100%);
+    z-index: 6;
+  }
+
+  .bottom-text {
+    position: absolute;
+    bottom: 28px;
+    left: 50px; right: 50px;
+    z-index: 8;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .bottom-text .tagline {
+    font-family: 'Bangers', cursive;
+    font-size: 28px;
+    color: #ff85c0;
+    letter-spacing: 3px;
+    filter: drop-shadow(2px 2px 0 #c2006e);
+  }
+
+  .bottom-text .cycle {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #ffd6e7;
+    letter-spacing: 3px;
+    opacity: 0.8;
+    text-align: right;
+  }
+
+  /* SPEED LINES */
+  .speed-lines {
+    position: absolute;
+    top: 120px;
+    right: 20px;
+    z-index: 4;
+    width: 120px;
+    height: 120px;
+  }
+  .speed-lines::before,
+  .speed-lines::after {
+    content: '';
+    position: absolute;
+    background: #ff85c0;
+    opacity: 0.5;
+  }
+  .speed-lines::before {
+    width: 80px; height: 3px;
+    top: 40px; right: 0;
+    transform: rotate(-30deg);
+    box-shadow: 0 12px 0 #ff2d78, 0 24px 0 #c2006e, 0 36px 0 #ff85c0, 0 -12px 0 #ff2d78;
+  }
+  .speed-lines::after {
+    width: 50px; height: 2px;
+    top: 70px; right: 10px;
+    transform: rotate(-30deg);
+    box-shadow: 0 10px 0 #c2006e, 0 20px 0 #ff2d78;
+  }
+
+  /* COMIC BORDER */
+  .comic-border {
+    position: absolute;
+    inset: 12px;
+    border: 4px solid #111;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  @media print {
+    body { background: white; }
+    .page { margin: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="halftone"></div>
+  <div class="splat splat-1"></div>
+  <div class="splat splat-2"></div>
+  <div class="splat splat-3"></div>
+  <div class="splat splat-4"></div>
+  <div class="comic-border"></div>
+
+  <div class="panel-top"></div>
+  <div class="panel-line-1"></div>
+  <div class="panel-line-2"></div>
+
+  <div class="dot-cluster">
+    <span class="d1"></span>
+    <span class="d2"></span>
+    <span class="d3"></span>
+    <span class="d4"></span>
+  </div>
+
+  <div class="hey">HEY</div>
+  <div class="neighbor">NEIGHBOR.</div>
+
+  <div class="speed-lines"></div>
+
+  <div class="tag-stripe">
+    <p>// free · outdoor · weekly · bring a lawn chair · snacks provided //</p>
+  </div>
+
+  <div class="body-section">
+    <div class="someone-line">
+      YOUR NEIGHBOR IS RUNNING<br>
+      A FREE <em>COMMUNITY WELLNESS</em><br>
+      MEETUP THIS SUMMER.
+    </div>
+  </div>
+
+  <div class="mid-section">
+    <div class="what-we-want">
+      <div class="bullet">
+        <div class="bullet-dot bd-pink"></div>
+        <p>Learn Polyscript — a language built to name feelings English can't</p>
+      </div>
+      <div class="bullet">
+        <div class="bullet-dot bd-deep"></div>
+        <p>Low pressure, drop-in, no experience needed</p>
+      </div>
+      <div class="bullet">
+        <div class="bullet-dot bd-light"></div>
+        <p>Snacks provided · $5 suggested · no one turned away</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="details-box">
+    <p>
+      <span>WHERE //</span> Dog park area · [Your Complex Name]<br>
+      <span>WHEN  //</span> Every [Day] · [Time] · Starting [Date]<br>
+      <span>BRING //</span> Your lawn chair · Your feelings · Yourself
+    </p>
+  </div>
+
+  <div class="url-block">
+    <div class="url-bg">
+      <p class="find-us">// learn more //</p>
+      <div class="url-text">
+        <span>sugarstop02-stack</span>.github.io/<span>carlina</span>-Ruth-Cardenas-arg/
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom-strip"></div>
+  <div class="bottom-text">
+    <div class="tagline">THE ARCHIVE REMEMBERS.</div>
+    <div class="cycle">75243 · DALLAS TX<br>SUMMER 2025</div>
+  </div>
+</div>
+</body>
+</html>
