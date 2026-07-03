@@ -1,0 +1,2804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corvid.OS — social feed</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Unbounded:wght@400;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg: #0d0b14;
+    --bg2: #13101f;
+    --bg3: #1a1628;
+    --border: #2a2040;
+    --neon-green: #39ff7a;
+    --neon-pink: #ff2d78;
+    --neon-orange: #ff6b1a;
+    --purple-dim: #7b4fa6;
+    --purple-mid: #a855f7;
+    --text: #e8deff;
+    --text-dim: #7a6a9a;
+    --glow-green: 0 0 8px #39ff7a88, 0 0 20px #39ff7a33;
+    --glow-pink: 0 0 8px #ff2d7888, 0 0 20px #ff2d7833;
+    --glow-orange: 0 0 8px #ff6b1a88, 0 0 20px #ff6b1a33;
+    /* faction colors */
+    --cyan: #00e5ff;
+    --magenta: #ff2d78;
+    --yellow: #ffe333;
+    --red: #ff4444;
+    --blue: #4da6ff;
+    --green-f: #39ff7a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100vw;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, #2a104433 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, #1a0a2233 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, #ffffff04 40px, #ffffff04 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, #ffffff04 40px, #ffffff04 41px);
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, #00000022 2px, #00000022 4px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: #0a0812ee;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--neon-green);
+    box-shadow: var(--glow-green);
+    padding: 0 24px;
+    display: flex; align-items: center; gap: 16px;
+    height: 52px;
+  }
+
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-weight: 900; font-size: 1.1rem;
+    letter-spacing: -0.02em;
+    color: var(--neon-green);
+    text-shadow: var(--glow-green);
+    white-space: nowrap;
+  }
+  .logo span { color: var(--neon-pink); text-shadow: var(--glow-pink); }
+
+  .topbar-status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; color: var(--neon-orange);
+    text-shadow: var(--glow-orange);
+    animation: blink 2.5s step-end infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .topbar-nav { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+  .nav-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem; padding: 5px 12px; cursor: pointer;
+    transition: all 0.15s; text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .nav-btn:hover, .nav-btn.active { border-color: var(--neon-pink); color: var(--neon-pink); box-shadow: var(--glow-pink); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr 260px;
+    gap: 0; max-width: 1300px; margin: 0 auto;
+    padding: 24px 16px; align-items: start;
+  }
+
+  .sidebar-left { padding-right: 20px; position: sticky; top: 76px; }
+
+  .sidebar-section { margin-bottom: 20px; }
+
+  .sidebar-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.15em;
+    color: var(--neon-orange); text-shadow: var(--glow-orange);
+    margin-bottom: 10px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-link {
+    display: flex; align-items: center; gap: 8px;
+    width: 100%; background: none; border: none;
+    color: var(--text-dim); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; padding: 6px 0; cursor: pointer;
+    text-align: left; text-transform: lowercase; letter-spacing: 0.04em;
+    transition: color 0.15s;
+  }
+  .sidebar-link:hover, .sidebar-link.active { color: var(--text); }
+  .sidebar-link .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--neon-green); flex-shrink: 0; }
+
+  .user-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    padding: 14px; margin-bottom: 20px; text-align: center;
+  }
+  .user-avatar {
+    width: 48px; height: 48px; margin: 0 auto 8px;
+    background: var(--bg3); border: 1px solid var(--neon-green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+  }
+  .user-name {
+    font-family: 'Unbounded', sans-serif; font-size: 0.7rem; font-weight: 700;
+    color: var(--neon-green); text-shadow: var(--glow-green); margin-bottom: 2px;
+  }
+  .user-handle { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: var(--text-dim); }
+
+  /* FEED */
+  .feed { min-width: 0; }
+
+  .feed-tabs {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .feed-tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--text-dim); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem; padding: 10px 16px; cursor: pointer;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    transition: all 0.15s; margin-bottom: -1px;
+  }
+  .feed-tab:hover { color: var(--text); }
+  .feed-tab.active { color: var(--neon-green); border-bottom-color: var(--neon-green); text-shadow: var(--glow-green); }
+
+  .tag-filter { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+
+  .tag {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.55rem;
+    padding: 2px 7px; background: var(--bg3); border: 1px solid var(--border);
+    color: var(--purple-mid); cursor: pointer; text-transform: lowercase;
+    transition: all 0.1s;
+  }
+  .tag:hover { border-color: var(--purple-mid); color: var(--text); }
+  .tag.active { background: var(--neon-green); color: var(--bg); border-color: var(--neon-green); font-weight: 700; }
+
+  /* POST CARDS */
+  .post {
+    background: var(--bg2); border: 1px solid var(--border);
+    margin-bottom: 12px; transition: border-color 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .post::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+  .post.accent-cyan::before { background: var(--cyan); box-shadow: 0 0 8px #00e5ff88; }
+  .post.accent-magenta::before { background: var(--magenta); box-shadow: var(--glow-pink); }
+  .post.accent-yellow::before { background: var(--yellow); box-shadow: 0 0 8px #ffe33388; }
+  .post.accent-red::before { background: var(--red); box-shadow: 0 0 8px #ff444488; }
+  .post.accent-blue::before { background: var(--blue); box-shadow: 0 0 8px #4da6ff88; }
+  .post.accent-green::before { background: var(--green-f); box-shadow: var(--glow-green); }
+  .post.accent-purple::before { background: var(--purple-mid); box-shadow: 0 0 8px #a855f788; }
+  .post.accent-orange::before { background: var(--neon-orange); box-shadow: var(--glow-orange); }
+  .post.accent-dim::before { background: var(--text-dim); }
+  .post:hover { border-color: var(--purple-dim); }
+
+  .post-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px 8px 18px; }
+
+  .post-avatar {
+    width: 32px; height: 32px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; background: var(--bg3); border: 1px solid var(--border);
+  }
+
+  .post-meta { flex: 1; min-width: 0; }
+
+  .post-author {
+    font-family: 'Unbounded', sans-serif; font-size: 0.7rem; font-weight: 700;
+  }
+  .post-author.cyan { color: var(--cyan); text-shadow: 0 0 8px #00e5ff88; }
+  .post-author.magenta { color: var(--magenta); text-shadow: var(--glow-pink); }
+  .post-author.yellow { color: var(--yellow); text-shadow: 0 0 8px #ffe33388; }
+  .post-author.red { color: var(--red); text-shadow: 0 0 8px #ff444488; }
+  .post-author.blue { color: var(--blue); text-shadow: 0 0 8px #4da6ff88; }
+  .post-author.green { color: var(--green-f); text-shadow: var(--glow-green); }
+  .post-author.purple { color: var(--purple-mid); text-shadow: 0 0 8px #a855f788; }
+  .post-author.orange { color: var(--neon-orange); text-shadow: var(--glow-orange); }
+  .post-author.dim { color: var(--text-dim); }
+
+  .post-subline { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: var(--text-dim); margin-top: 1px; }
+
+  .post-badge {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.5rem;
+    padding: 1px 6px; border: 1px solid; text-transform: uppercase; letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+  .post-badge.ic { border-color: var(--neon-green); color: var(--neon-green); }
+  .post-badge.fandom { border-color: var(--purple-mid); color: var(--purple-mid); }
+
+  .post-body { padding: 0 18px 12px; font-size: 0.82rem; line-height: 1.7; color: var(--text); }
+  .post-body em { font-style: italic; color: #c4aaff; }
+  .post-body strong { color: var(--neon-orange); font-weight: 700; }
+
+  .post-tags { display: flex; gap: 4px; flex-wrap: wrap; padding: 0 18px 10px; }
+
+  .thread-chain { border-top: 1px solid var(--border); margin-top: 4px; }
+
+  .thread-reply {
+    display: flex; gap: 10px; padding: 10px 14px 10px 18px;
+    border-top: 1px solid #1f1a30; position: relative;
+  }
+  .thread-reply::before {
+    content: ''; position: absolute; left: 30px; top: 0; bottom: 0;
+    width: 1px; background: var(--border);
+  }
+
+  .thread-avatar {
+    width: 24px; height: 24px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; background: var(--bg3); border: 1px solid var(--border);
+    position: relative; z-index: 1;
+  }
+
+  .thread-content { flex: 1; }
+
+  .thread-author {
+    font-family: 'Unbounded', sans-serif; font-size: 0.6rem; font-weight: 700;
+    margin-bottom: 3px;
+  }
+  .thread-text { font-size: 0.75rem; line-height: 1.6; color: var(--text); }
+  .thread-text em { font-style: italic; color: #c4aaff; }
+
+  .post-actions {
+    display: flex; border-top: 1px solid var(--border);
+  }
+  .action-btn {
+    flex: 1; background: none; border: none; border-right: 1px solid var(--border);
+    color: var(--text-dim); font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem; padding: 8px 6px; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+    gap: 4px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .action-btn:last-child { border-right: none; }
+  .action-btn:hover { background: var(--bg3); }
+  .action-btn.upvote:hover { color: var(--neon-green); text-shadow: var(--glow-green); }
+  .action-btn.reblog:hover { color: var(--neon-pink); text-shadow: var(--glow-pink); }
+  .action-btn.reply-btn:hover { color: var(--purple-mid); }
+
+  /* SECTION DIVIDER */
+  .feed-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 20px 0 14px;
+  }
+  .feed-divider-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+    text-transform: uppercase; letter-spacing: 0.15em; color: var(--neon-orange);
+    text-shadow: var(--glow-orange); white-space: nowrap;
+  }
+  .feed-divider-line { flex: 1; height: 1px; background: var(--border); }
+
+  /* RIGHT SIDEBAR */
+  .sidebar-right { padding-left: 20px; position: sticky; top: 76px; }
+
+  .who-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    padding: 8px 10px; margin-bottom: 6px; display: flex;
+    align-items: center; gap: 8px;
+  }
+  .who-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .who-dot.cyan { background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  .who-dot.magenta { background: var(--magenta); box-shadow: var(--glow-pink); }
+  .who-dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+  .who-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .who-dot.blue { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+  .who-dot.green { background: var(--green-f); box-shadow: var(--glow-green); }
+  .who-dot.purple { background: var(--purple-mid); box-shadow: 0 0 6px var(--purple-mid); }
+  .who-dot.orange { background: var(--neon-orange); box-shadow: var(--glow-orange); }
+  .who-dot.dim { background: var(--text-dim); }
+
+  .who-name { font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; color: var(--text); }
+  .who-faction { font-family: 'Share Tech Mono', monospace; font-size: 0.52rem; color: var(--text-dim); }
+
+  .lore-ticker {
+    border: 1px solid var(--border); background: var(--bg2);
+    padding: 8px 10px; margin-bottom: 12px; overflow: hidden;
+  }
+  .ticker-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.55rem;
+    color: var(--neon-pink); text-transform: uppercase; letter-spacing: 0.12em;
+    margin-bottom: 4px; text-shadow: var(--glow-pink);
+  }
+  .ticker-text {
+    font-family: 'Share Tech Mono', monospace; font-size: 0.65rem;
+    color: var(--text-dim); white-space: nowrap;
+    animation: scroll-text 30s linear infinite; display: block;
+  }
+  @keyframes scroll-text { 0%{transform:translateX(100%)} 100%{transform:translateX(-200%)} }
+
+  @media (max-width: 900px) {
+    html, body { max-width: 100vw; overflow-x: hidden; }
+    .layout { grid-template-columns: 1fr; padding: 10px 12px 10px 10px; max-width: 100vw; box-sizing: border-box; }
+    .sidebar-left, .sidebar-right { display: none; }
+    .feed { min-width: 0; width: 100%; box-sizing: border-box; overflow: hidden; }
+    .post { width: 100%; box-sizing: border-box; overflow: hidden; word-break: break-word; }
+    .post-body { font-size: 0.72rem; line-height: 1.6; padding: 0 10px 10px 14px; }
+    .post-header { padding: 10px 10px 6px 14px; gap: 8px; }
+    .post-avatar { width: 28px; height: 28px; font-size: 0.85rem; flex-shrink: 0; }
+    .post-author { font-size: 0.62rem; }
+    .post-subline { font-size: 0.52rem; }
+    .post-badge { font-size: 0.45rem; padding: 1px 5px; }
+    .post-tags { padding: 0 10px 8px 14px; gap: 3px; }
+    .post-tags .tag { font-size: 0.48rem; padding: 1px 5px; }
+    .feed-tabs { overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+    .feed-tab { font-size: 0.58rem; padding: 8px 10px; }
+    .tag-filter { gap: 4px; }
+    .tag-filter .tag { font-size: 0.48rem; padding: 2px 5px; }
+    .topbar { padding: 0 10px; gap: 6px; height: 46px; }
+    .nav-btn { font-size: 0.55rem; padding: 3px 7px; }
+    .logo { font-size: 0.85rem; }
+    .topbar-status { font-size: 0.5rem; }
+    .thread-chain { overflow: hidden; }
+    .thread-reply { padding: 8px 10px 8px 14px; gap: 8px; }
+    .thread-avatar { width: 22px; height: 22px; font-size: 0.65rem; flex-shrink: 0; }
+    .thread-text { font-size: 0.68rem; }
+    .thread-author { font-size: 0.55rem; }
+    .action-btn { font-size: 0.55rem; padding: 7px 3px; }
+    .feed-divider { margin: 14px 0 10px; }
+    .feed-divider-label { font-size: 0.52rem; }
+    .post-actions { overflow: hidden; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">Corvid<span>.OS</span></div>
+  <div class="topbar-status">● SOCIAL.FEED // LIVE</div>
+  <nav class="topbar-nav">
+    <button class="nav-btn active">feed</button>
+    <button class="nav-btn">lore</button>
+    <button class="nav-btn">characters</button>
+    <button class="nav-btn">map</button>
+  </nav>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left">
+    <div class="user-card">
+      <div class="user-avatar">?</div>
+      <div class="user-name">—</div>
+      <div class="user-handle">not logged in</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">// navigate</div>
+      <button class="sidebar-link active"><span class="dot"></span> all posts</button>
+      <button class="sidebar-link"><span class="dot"></span> in-character</button>
+      <button class="sidebar-link"><span class="dot"></span> fandom</button>
+      <button class="sidebar-link"><span class="dot"></span> threads</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">// factions</div>
+      <button class="sidebar-link" data-faction="baqaya"><span class="dot" style="background:var(--cyan)"></span> baqaya</button>
+      <button class="sidebar-link" data-faction="acre"><span class="dot" style="background:var(--magenta)"></span> âcre</button>
+      <button class="sidebar-link" data-faction="dulzor"><span class="dot" style="background:var(--yellow)"></span> dulzor</button>
+      <button class="sidebar-link" data-faction="semper"><span class="dot" style="background:var(--red)"></span> semper</button>
+      <button class="sidebar-link" data-faction="saudade"><span class="dot" style="background:var(--blue)"></span> saudade</button>
+      <button class="sidebar-link" data-faction="icchha"><span class="dot" style="background:var(--green-f)"></span> icchha</button>
+    </div>
+  </aside>
+
+  <!-- MAIN FEED -->
+  <main class="feed">
+
+    <div class="feed-tabs">
+      <button class="feed-tab active">all</button>
+      <button class="feed-tab">in-character</button>
+      <button class="feed-tab">fandom</button>
+      <button class="feed-tab">threads</button>
+    </div>
+
+    <div class="tag-filter">
+      <span class="tag active">#all</span>
+      <span class="tag">#shadowsofprimrose</span>
+      <span class="tag">#harbingers</span>
+      <span class="tag">#thehollow</span>
+      <span class="tag">#amora</span>
+      <span class="tag">#tradecraft</span>
+      <span class="tag">#whispers</span>
+      <span class="tag">#ic</span>
+    </div>
+
+    <!-- ═══════════ SECTION: CORVID CAST ═══════════ -->
+
+    <div class="feed-divider">
+      <div class="feed-divider-line"></div>
+      <div class="feed-divider-label">// corvid cast</div>
+      <div class="feed-divider-line"></div>
+    </div>
+
+    <!-- POST 1: Nadim / Harbingers -->
+    <div class="post accent-cyan" data-type="ic" data-fandom="harbingers" data-faction="baqaya" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">📖</div>
+        <div class="post-meta">
+          <div class="post-author cyan">Nadim Al-Hakim</div>
+          <div class="post-subline">@nadim.archive · baqaya · 4h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        finished <em>The Dead Sun Never Sets</em> at 2am. couldn't sleep after. the empty town, the bus doors opening — it reads like something you've already lived through and forgotten. i kept stopping to check if i'd annotated a page i hadn't read yet.<br><br>
+        that's either very good writing or something is wrong with me. possibly both.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#harbingers</span>
+        <span class="tag">#dead sun never sets</span>
+        <span class="tag">#ellie gage</span>
+        <span class="tag">#unreliable memory</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🔬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+            <div class="thread-text">the déjà vu is intentional. the author confirmed in an interview that the prose tense shifts every 11 pages. your brain is pattern-matching before you consciously notice. you're fine. the book is doing it to you on purpose.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text"><em>that doesn't make me feel better, Priya.</em></div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 34</button>
+        <button class="action-btn reblog">⟳ 12</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- POST 2: Élodie / Shadows of Primrose -->
+    <div class="post accent-magenta" data-type="ic" data-fandom="shadowsofprimrose" data-faction="acre" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">⚗️</div>
+        <div class="post-meta">
+          <div class="post-author magenta">Élodie Moreau</div>
+          <div class="post-subline">@elodie.encrypted · âcre · 6h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        headmistress vernadette did not do anything wrong in book two. you can all calm down.<br><br>
+        she withheld information from students who had no framework to use it safely. that is not villainy, that is <strong>operational security</strong>. i will not be taking criticism at this time.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#vernadette defense squad</span>
+        <span class="tag">#she was RIGHT</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🩺</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Mateo Reyes</div>
+            <div class="thread-text">élodie she literally locked a twelve year old in a room for a week</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">⚗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+            <div class="thread-text">a well-furnished room. with books. mateo i do not have time for your empathy right now.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🏗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--red)">Amina Brooks</div>
+            <div class="thread-text">i hate that i agree with élodie on this one. the kid had a destabilized core, containment was the right call. the execution was wrong. the decision wasn't.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 61</button>
+        <button class="action-btn reblog">⟳ 28</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- POST 3: Mateo / The Hollow -->
+    <div class="post accent-yellow" data-type="ic" data-fandom="thehollow" data-faction="dulzor" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🩺</div>
+        <div class="post-meta">
+          <div class="post-author yellow">Mateo Reyes</div>
+          <div class="post-subline">@mateo.steadyhands · dulzor · 9h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        genuinely cannot stop thinking about tadhg cataloging the glass-furred squirrel and just writing <em>"diet: nuts, berries, and possibly starlight?"</em><br><br>
+        the question mark. the question mark is doing so much. he doesn't know. he'll never know. he wrote it down anyway because maybe someone after him will figure it out and that is the most tender thing i've read all month.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#thehollow</span>
+        <span class="tag">#tadhg o'sidhe</span>
+        <span class="tag">#whimwood field notes</span>
+        <span class="tag">#crying about a squirrel</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 88</button>
+        <button class="action-btn reblog">⟳ 47</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- POST 4: Amina / Harbingers -->
+    <div class="post accent-red" data-type="ic" data-fandom="harbingers" data-faction="semper" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🏗️</div>
+        <div class="post-meta">
+          <div class="post-author red">Amina Brooks</div>
+          <div class="post-subline">@amina.semper · semper · 11h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        the connection theory people and i are going to keep not agreeing on this.<br><br>
+        two books. two events. separate. the hum is a recurring motif, not a shared signal. the author uses it because it's unsettling, not because it's a clue. <strong>correlation is not architecture.</strong><br><br>
+        that said i've reread chapter seven four times this week so.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#harbingers</span>
+        <span class="tag">#silent city</span>
+        <span class="tag">#anti connection theory</span>
+        <span class="tag">#but also maybe</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 43</button>
+        <button class="action-btn reblog">⟳ 19</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- POST 5: Thiago / The Hollow -->
+    <div class="post accent-blue" data-type="ic" data-fandom="thehollow" data-faction="saudade" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🎵</div>
+        <div class="post-meta">
+          <div class="post-author blue">Thiago Carvalho</div>
+          <div class="post-subline">@thiago.saudade · saudade · 14h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        the fanon that whimwood is grieving and not malevolent — i need everyone who believes this to know that you are carrying it correctly.<br><br>
+        something broke open and kept breathing. it didn't mean to become what it became. it just didn't stop. that's not a monster. that's a wound that learned to move through the world.<br><br>
+        <em>tadhg walked into a wound. he brought dried fruit.</em>
+      </div>
+      <div class="post-tags">
+        <span class="tag">#thehollow</span>
+        <span class="tag">#whimwood is grieving</span>
+        <span class="tag">#grief as entity</span>
+        <span class="tag">#i have feelings</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🩺</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Mateo Reyes</div>
+            <div class="thread-text"><em>"he walked into a wound and brought dried fruit"</em> thiago i'm going to quote this at people for the rest of my life</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 112</button>
+        <button class="action-btn reblog">⟳ 63</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- POST 6: Priya / Shadows of Primrose -->
+    <div class="post accent-green" data-type="ic" data-fandom="shadowsofprimrose" data-faction="icchha" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🔬</div>
+        <div class="post-meta">
+          <div class="post-author green">Priya Verma</div>
+          <div class="post-subline">@priya.icchha · icchha · 16h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        "core bleeding" is scientifically incoherent within the established rules of the primrose universe and i refuse to entertain it as serious theory.<br><br>
+        <strong>however.</strong> the well of revelation chapter has three pronoun inconsistencies that no one is talking about, a sentence that contradicts the established timeline by approximately nine months, and a description of fennic's eyes that uses the word <em>chosen</em> without attribution.<br><br>
+        so i'm not saying the well is lying. i'm saying the well is doing something the author has not yet explained and i intend to find out what.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#the well of revelation</span>
+        <span class="tag">#close reading</span>
+        <span class="tag">#book3 speculation</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text">you have the page numbers on all three inconsistencies, don't you.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🔬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+            <div class="thread-text">i have a spreadsheet.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 77</button>
+        <button class="action-btn reblog">⟳ 41</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ SECTION: NEW AMORA IC POSTS ═══════════ -->
+
+    <!-- Nadim / Amora: A Game of Luck -->
+    <div class="post accent-cyan" data-type="ic" data-fandom="amora" data-faction="baqaya" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">📖</div>
+        <div class="post-meta">
+          <div class="post-author cyan">Nadim Al-Hakim</div>
+          <div class="post-subline">@nadim.archive · baqaya · 1h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        okay i have been on the Amora stories for six hours and "A Game of Luck" just cracked something open in me.<br><br>
+        <em>two old men, sitting in the morning light, playing chess, hands resting together on the board.</em> that's the whole story. that's the whole thing. and it absolutely destroyed me. not because it's sad — it's not, not entirely — but because they <em>made it</em>. they made it to the part where they can sit in a sunlit window and bicker about whether someone is stalling. forty years of loving each other through a kingdom that didn't want them and the ending is just: they're still here. they're still playing.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#a game of luck</span>
+        <span class="tag">#eldric and alistair</span>
+        <span class="tag">#they made it</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🎵</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--blue)">Thiago Carvalho</div>
+            <div class="thread-text">the part where eldric already has a strategy planned three moves ahead and alistair KNOWS. forty years and he can still read him like that. i'm going to go lie down.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text">"do you ever think we got lucky" / "i'll take it" — that's the thesis of the whole collection. that's everything.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 94</button>
+        <button class="action-btn reblog">⟳ 51</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Élodie / Amora: A Dance of Defiance -->
+    <div class="post accent-magenta" data-type="ic" data-fandom="amora" data-faction="acre" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">⚗️</div>
+        <div class="post-meta">
+          <div class="post-author magenta">Élodie Moreau</div>
+          <div class="post-subline">@elodie.encrypted · âcre · 3h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        "A Dance of Defiance" is a masterclass in social engineering disguised as a romance story and i will be writing a paper.<br><br>
+        cordelia and her guard arrive at the ball with completely incompatible cover stories and within eight minutes have negotiated a bilateral arrangement that protects both parties, subverts the ritual entirely, and successfully deceives a room full of observers. the chromatic pin as silent authentication. the dance as operational cover. the two lovers coordinating through eye contact from opposite sides of the room. this is <strong>exceptional fieldwork</strong>. cordelia's parents hired a spy to contain her and she immediately recruited him. phenomenal.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#a dance of defiance</span>
+        <span class="tag">#cordelia</span>
+        <span class="tag">#operational cover</span>
+        <span class="tag">#chromatic pin</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🏗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--red)">Amina Brooks</div>
+            <div class="thread-text">élodie you are the only person who read a love story and called it fieldwork and somehow you're completely right</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">⚗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+            <div class="thread-text">all love stories are fieldwork, amina. some people just refuse to take notes.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 118</button>
+        <button class="action-btn reblog">⟳ 76</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Mateo / Amora: The Son and Daughter -->
+    <div class="post accent-yellow" data-type="ic" data-fandom="amora" data-faction="dulzor" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🩺</div>
+        <div class="post-meta">
+          <div class="post-author yellow">Mateo Reyes</div>
+          <div class="post-subline">@mateo.steadyhands · dulzor · 5h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        the father in "The Son and Daughter" doesn't say anything right. he doesn't say anything wrong either. he just says <em>sweetheart</em> and asks her to sit down.<br><br>
+        "it wasn't a celebration, nor was it the rejection she had feared. it was something in between—a space she could breathe in."<br><br>
+        i've read a lot of coming out stories. the triumphant ones and the devastating ones and the ones that take years to resolve. this one is the most real to me because it's just. a man trying to catch up to his child. dinner getting cold. no language yet for what just happened. love that isn't ready but shows up anyway.<br><br>
+        i'm not okay.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#the son and daughter</span>
+        <span class="tag">#megan</span>
+        <span class="tag">#a space she could breathe in</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 203</button>
+        <button class="action-btn reblog">⟳ 142</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Amina / Amora: Royal Mimicry -->
+    <div class="post accent-red" data-type="ic" data-fandom="amora" data-faction="semper" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🏗️</div>
+        <div class="post-meta">
+          <div class="post-author red">Amina Brooks</div>
+          <div class="post-subline">@amina.semper · semper · 7h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        "Royal Mimicry" is doing something really specific and i want to talk about it.<br><br>
+        cordelia and stark build a false love story so the city keeps watching them and never looks at what they're actually doing. it's not a cover. it's a <em>system</em>. every ball appearance, every hand-kiss, every perfectly timed glance — that's logistics. the attention of the nobility is the infrastructure for the safehouse network. they turned visibility into a shield.<br><br>
+        the romance is load-bearing. if they stop performing it, people start looking elsewhere. somewhere more dangerous.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#royal mimicry</span>
+        <span class="tag">#cordelia and stark</span>
+        <span class="tag">#the romance is load-bearing</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">⚗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+            <div class="thread-text">amina. AMINA. "the romance is load-bearing." i am going to put that on something.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text">and at the end they offer each other their hands again — not in performance, but in solidarity — and the text doesn't distinguish between them. it doesn't have to.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 156</button>
+        <button class="action-btn reblog">⟳ 93</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Thiago / Amora: Stark Love + The Raid -->
+    <div class="post accent-blue" data-type="ic" data-fandom="amora" data-faction="saudade" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🎵</div>
+        <div class="post-meta">
+          <div class="post-author blue">Thiago Carvalho</div>
+          <div class="post-subline">@thiago.saudade · saudade · 9h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        "stark love" ends with them in a garden beneath a pear tree whispering about how much time they have. it's one of the most tender things in the collection.<br><br>
+        and then "the unauthorized raid" happens three stories later.<br><br>
+        i don't think this is an accident. the collection knows what it's doing. it lets you sit with the tenderness. it lets you love them in the garden. and then it shows you why the garden has to be secret. the raid isn't there to punish anyone. it's there to make sure you <em>understand</em> what the garden costs. what it protects.<br><br>
+        <em>for as long as we dare.</em>
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#stark love</span>
+        <span class="tag">#the unauthorized raid</span>
+        <span class="tag">#for as long as we dare</span>
+        <span class="tag">#structure as meaning</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 177</button>
+        <button class="action-btn reblog">⟳ 108</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Priya / Amora: Secret of the Queens -->
+    <div class="post accent-green" data-type="ic" data-fandom="amora" data-faction="icchha" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🔬</div>
+        <div class="post-meta">
+          <div class="post-author green">Priya Verma</div>
+          <div class="post-subline">@priya.icchha · icchha · 11h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        "the secret of the queens" raises several questions i need answered immediately.<br><br>
+        the First Knight's history was deliberately suppressed. queen ismelda knew. her predecessor knew. this is an institutional cover-up spanning multiple reigns — which means either the gilded council knew and sanctioned it, or the queens kept it from the council entirely. and now the princess swears silence.<br><br>
+        <strong>why.</strong> the stated reason is "the world isn't ready." but ready for what, exactly? and who decides when? and why is the daughter of the queen who buried this the one who is going to have to change amora?<br><br>
+        i have a spreadsheet. it is mostly questions.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#the secret of the queens</span>
+        <span class="tag">#gilded council</span>
+        <span class="tag">#the first knight</span>
+        <span class="tag">#not ready but who decides</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text">the question that keeps me up: ismelda says "not all victories can be spoken aloud" like she's speaking from experience. is she protecting someone else's story too?</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🔬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+            <div class="thread-text">nadim i added that to the spreadsheet. column: "things ismelda knows." it's getting long.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 134</button>
+        <button class="action-btn reblog">⟳ 89</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ SECTION: FANDOM HANDLES ═══════════ -->
+
+    <div class="feed-divider">
+      <div class="feed-divider-line"></div>
+      <div class="feed-divider-label">// fandom community</div>
+      <div class="feed-divider-line"></div>
+    </div>
+
+    <!-- @fennicsmossygarden -->
+    <div class="post accent-purple" data-type="fandom" data-fandom="shadowsofprimrose" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🌿</div>
+        <div class="post-meta">
+          <div class="post-author purple">Wren Callowell</div>
+          <div class="post-subline">@fennicsmossygarden · she/her · book 1 archivist · 2h ago</div>
+        </div>
+        <div class="post-badge fandom">sop</div>
+      </div>
+      <div class="post-body">
+        if you haven't reread finnagain since book 2 came out you are missing EVERYTHING<br><br>
+        chapter four. fennic drops his lunch in front of the entire refectory and nobody laughs. nobody. a school full of children and not one of them laughs. that scene read as shy-kid awkwardness the first time. now knowing what we know about his core manifesting as <em>social silencing</em>??? i'm sick actually
+      </div>
+      <div class="post-tags">
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#finnagain</span>
+        <span class="tag">#fennic</span>
+        <span class="tag">#it was foreshadowing</span>
+        <span class="tag">#reread culture</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">⚔️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Dex Harrow</div>
+            <div class="thread-text">wait wait wait. social silencing. as a magic manifestation. the refectory scene. i need to sit down</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🌿</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Wren Callowell</div>
+            <div class="thread-text">and then count how many times he says "it's fine" in book one. count them. i have. it's 31.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 4.2k</button>
+        <button class="action-btn reblog">⟳ 1.8k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @primrose-fallen -->
+    <div class="post accent-purple" data-type="fandom" data-fandom="shadowsofprimrose" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🌑</div>
+        <div class="post-meta">
+          <div class="post-author purple">Sable Orin</div>
+          <div class="post-subline">@primrose-fallen · they/them · elara stan · 5h ago</div>
+        </div>
+        <div class="post-badge fandom">sop</div>
+      </div>
+      <div class="post-body">
+        her final line was a THREAT and i will be taking questions<br><br>
+        "I'll remember you said that, Callum" — in what universe is that a goodbye?? that's a filing system. she is putting him in a FILING SYSTEM. the woman has obsidian-tier memory core and she just told a seventeen year old she has indexed this moment. for later.<br><br>
+        the book 2 ending discourse will never be over because elara intended it this way
+      </div>
+      <div class="post-tags">
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#elara</span>
+        <span class="tag">#book 2 ending discourse</span>
+        <span class="tag">#it was a THREAT</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 6.7k</button>
+        <button class="action-btn reblog">⟳ 3.1k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @the-maren-project -->
+    <div class="post accent-purple" data-type="fandom" data-fandom="shadowsofprimrose" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">📂</div>
+        <div class="post-meta">
+          <div class="post-author purple">Nell Ashby</div>
+          <div class="post-subline">@the-maren-project · she/they · maren ashwick chronicler · 7h ago</div>
+        </div>
+        <div class="post-badge fandom">sop</div>
+      </div>
+      <div class="post-body">
+        she was mentioned on page 84 and page 211 and that is ENOUGH<br><br>
+        page 84: she holds the door for callum without looking up from her book. page 211: she is described as "already gone" when he arrives at the library. two mentions. two mentions and i have reconstructed an entire person.<br><br>
+        her full name is maren elspeth ashwick. she is a third-year witch-faction student with a secondary study in theoretical core science. she has been watching callum for two years without particular investment. she finds him slightly exhausting. she likes him anyway.<br><br>
+        i did not make this up. i assembled it. there's a difference.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#maren ashwick</span>
+        <span class="tag">#calwery</span>
+        <span class="tag">#background character rights</span>
+        <span class="tag">#the maren project</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 9.1k</button>
+        <button class="action-btn reblog">⟳ 5.4k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @deadlightarchive -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="harbingers" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">📡</div>
+        <div class="post-meta">
+          <div class="post-author dim">Cass Veyra</div>
+          <div class="post-subline">@deadlightarchive · she/her · connection theory · 3h ago</div>
+        </div>
+        <div class="post-badge fandom">harbingers</div>
+      </div>
+      <div class="post-body">
+        the hum is the same hum. i have a spreadsheet.<br><br>
+        <strong>document 12-F: cross-text frequency analysis</strong><br>
+        dead sun ch.1 — ellie describes the bus engine as "a sound below the sound, like something tuning." silent city ch.4 — the narrator wakes at 3am to "a frequency the building wasn't making." ch.9 — "the hum again. not tinnitus. i've been checked." ch.14 — the alley man is humming. he stops when he sees the narrator.<br><br>
+        the alley man stops humming. he stops. when he sees him. i'm sorry what.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#harbingers</span>
+        <span class="tag">#connection theory</span>
+        <span class="tag">#harbingers convergence</span>
+        <span class="tag">#the hum</span>
+        <span class="tag">#alley man discourse</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🗂️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">Tobias Fell</div>
+            <div class="thread-text">or. hear me out. people hum. buildings hum. buses hum. this is not evidence. this is resonance as narrative device, not intertext signal.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">📡</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">Cass Veyra</div>
+            <div class="thread-text">then why does it stop when observed. things that hum don't stop when they're seen. only things that <em>know</em> they're being watched.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 2.3k</button>
+        <button class="action-btn reblog">⟳ 987</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @elliewalksforward -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="harbingers" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🚶</div>
+        <div class="post-meta">
+          <div class="post-author dim">Rue Talinden</div>
+          <div class="post-subline">@elliewalksforward · they/them · ellie stan · 8h ago</div>
+        </div>
+        <div class="post-badge fandom">harbingers</div>
+      </div>
+      <div class="post-body">
+        she picked up a rock and kept moving. i would have sat down and cried.<br><br>
+        no one talks enough about the fact that ellie never asks why. she asks <em>which way</em>. she asks <em>how far</em>. she never once stops to demand an explanation from whatever emptied that town. she just keeps walking and i think about that at least twice a week.<br><br>
+        she is not brave because she isn't scared. she's brave because she decided that the direction forward is always answerable and the question of why is not. and she's right.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#harbingers</span>
+        <span class="tag">#ellie gage</span>
+        <span class="tag">#dead sun never sets</span>
+        <span class="tag">#she deserves to survive</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 5.8k</button>
+        <button class="action-btn reblog">⟳ 2.9k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @whimwood-field-notes -->
+    <div class="post accent-orange" data-type="fandom" data-fandom="thehollow" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🪲</div>
+        <div class="post-meta">
+          <div class="post-author orange">Pip Sorrel</div>
+          <div class="post-subline">@whimwood-field-notes · unofficial catalog archive · 1h ago</div>
+        </div>
+        <div class="post-badge fandom">hollow</div>
+      </div>
+      <div class="post-body">
+        <strong>COMMUNITY SUBMISSION #47 — the threadmoth</strong><br><br>
+        <em>Habitat:</em> found at the edges of memory, specifically near places where something important was forgotten. will sometimes appear at crossroads at dusk for no discernible reason.<br>
+        <em>Diet:</em> unfinished sentences. also possibly grief? unclear.<br>
+        <em>Observations:</em> wings leave no dust but if you look at them directly they display a pattern that appears to mean something. no one who has looked long enough to read it has been able to explain what they saw afterward. tadhg would note: "do not look directly. or do. results may constitute data."<br><br>
+        submitted by: @donturnback
+      </div>
+      <div class="post-tags">
+        <span class="tag">#thehollow</span>
+        <span class="tag">#whimwood catalog</span>
+        <span class="tag">#fan creature</span>
+        <span class="tag">#the threadmoth</span>
+        <span class="tag">#community submission</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🩺</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Mateo Reyes</div>
+            <div class="thread-text">diet: unfinished sentences. i felt that personally.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🎵</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--blue)">Thiago Carvalho</div>
+            <div class="thread-text">the field note format is perfect. "results may constitute data" is the most tadhg sentence anyone has ever written and tadhg didn't write it. incredible.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 3.4k</button>
+        <button class="action-btn reblog">⟳ 1.6k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @donturnback -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="harbingers" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">📞</div>
+        <div class="post-meta">
+          <div class="post-author dim">Mara Linde</div>
+          <div class="post-subline">@donturnback · she/they · phone voice theorist · 12h ago</div>
+        </div>
+        <div class="post-badge fandom">harbingers</div>
+      </div>
+      <div class="post-body">
+        two words. TWO WORDS and i haven't slept right since.<br><br>
+        "don't turn back."<br><br>
+        not "keep going." not "run." not "you're in danger." <em>don't turn back.</em> the specificity of the verb. the assumption that the instinct will be to turn. whoever is on that phone knows ellie well enough — or knows this situation well enough — to know that she is going to want to look behind her. and whatever is behind her is either worse than what's ahead or it isn't there anymore.<br><br>
+        i think it isn't there anymore. i think she's already past it. i think "don't turn back" is mercy.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#harbingers</span>
+        <span class="tag">#the voice on the phone</span>
+        <span class="tag">#dead sun never sets</span>
+        <span class="tag">#two words</span>
+        <span class="tag">#it was mercy</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 7.2k</button>
+        <button class="action-btn reblog">⟳ 4.1k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ SECTION: NEW TRADECRAFT + WHISPERS IC POSTS ═══════════ -->
+
+    <!-- Mateo / Tradecraft: Lyra and her body -->
+    <div class="post accent-yellow" data-type="ic" data-fandom="tradecraft" data-faction="dulzor" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🩺</div>
+        <div class="post-meta">
+          <div class="post-author yellow">Mateo Reyes</div>
+          <div class="post-subline">@mateo.steadyhands · dulzor · 30m ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        <em>Tradecraft</em> is doing something with chronic pain that i haven't seen done this carefully before.<br><br>
+        lyra doesn't have good days and bad days in the way fiction usually frames it. she has degrees. she has "aching but manageable" and "joints screaming" and the entire spectrum in between, and she is constantly doing quiet calculations about it — can i stand through this meeting, can i make a full batch today, is this a hot bath night or a knee brace night. the accommodation is not the exception. it is the whole texture of her life.<br><br>
+        and she still wants things. still makes things. the disability is not a tragedy arc. it's just <em>also true</em> at the same time as everything else.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#tradecraft</span>
+        <span class="tag">#lyra primley</span>
+        <span class="tag">#chronic pain rep</span>
+        <span class="tag">#degrees not days</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🎵</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--blue)">Thiago Carvalho</div>
+            <div class="thread-text">the moonroot in her last batch. she figured out the dosage herself. not from a textbook. from paying obsessive attention to her own body for years. her disability is also her expertise and the book just. lets that be true.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🩺</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Mateo Reyes</div>
+            <div class="thread-text">that detail is doing so much work. she's not just making candy. she's translating years of unwanted self-knowledge into something that helps other people. that's alchemy in the truest sense.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 147</button>
+        <button class="action-btn reblog">⟳ 88</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Thiago / Tradecraft: the cane as conduit -->
+    <div class="post accent-blue" data-type="ic" data-fandom="tradecraft" data-faction="saudade" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🎵</div>
+        <div class="post-meta">
+          <div class="post-author blue">Thiago Carvalho</div>
+          <div class="post-subline">@thiago.saudade · saudade · 2h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        the thing the book does with lyra's cane.<br><br>
+        she used to carry a wand. sleek, traditional. she doesn't anymore. now the cane is both support and focus — "a steady conduit for magic and a reminder that power didn't always look like perfection." it does the same work the wand did, plus the work the wand never had to do.<br><br>
+        she didn't downgrade. she adapted. and the cane doesn't apologize for existing and neither does she, and the narrative never once frames it as sad, and i've been thinking about that sentence for three days.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#tradecraft</span>
+        <span class="tag">#lyra primley</span>
+        <span class="tag">#the cane</span>
+        <span class="tag">#power didn't always look like perfection</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 219</button>
+        <button class="action-btn reblog">⟳ 163</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Élodie / Tradecraft: Elizabeth + the system -->
+    <div class="post accent-magenta" data-type="ic" data-fandom="tradecraft" data-faction="acre" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">⚗️</div>
+        <div class="post-meta">
+          <div class="post-author magenta">Élodie Moreau</div>
+          <div class="post-subline">@elodie.encrypted · âcre · 4h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        the orientation chapter is actually a devastating structural critique wearing the costume of a comedic scene.<br><br>
+        lyra is handed a nametag that says "magic apprentice" as if that still means anything. the achievement chart has a <em>broom icon</em>. the woman at the front uses the phrase "you're in control" while controlling every aspect of their day. the TAR — Training Achievement Record — gamifies survival and calls it progress.<br><br>
+        job corps is not the villain. it's trying. but it is a bureaucracy that was built to process people efficiently, and lyra is not efficiently processable. and elizabeth says it plainest: <em>"no one comes to job corps because they're happy with where they are."</em><br><br>
+        that line landed like a verdict. elizabeth has been there longer than one chapter and i can tell.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#tradecraft</span>
+        <span class="tag">#lyra primley</span>
+        <span class="tag">#elizabeth oakley</span>
+        <span class="tag">#job corps</span>
+        <span class="tag">#the system is trying badly</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🏗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--red)">Amina Brooks</div>
+            <div class="thread-text">the glasses that sparkle when someone lies. at intake. that detail is vicious. the institution built a lie detector into its own check-in process and nobody questions why.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">⚗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+            <div class="thread-text">and the intake form updating her name to lyra in smoke. her correct name is literally burned in. the system accidentally does something right once and it's a complete accident. i have feelings about this.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 173</button>
+        <button class="action-btn reblog">⟳ 111</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Nadim / Whispers in the Concrete -->
+    <div class="post accent-cyan" data-type="ic" data-fandom="whispers" data-faction="baqaya" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">📖</div>
+        <div class="post-meta">
+          <div class="post-author cyan">Nadim Al-Hakim</div>
+          <div class="post-subline">@nadim.archive · baqaya · 6h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        <em>Whispers in the Concrete</em> is a post-apocalyptic monster field guide written in-universe by a survivor named Cal Emmerich and it is doing something genuinely unsettling to the bestiary format.<br><br>
+        a normal field guide is clinical. distanced. this one has a voice — tired, sardonic, doing this because someone has to — and that voice makes every entry feel like testimony. these aren't descriptions of creatures. they're warnings from someone who has already lost people to them. the knowledge in this book was bought.<br><br>
+        the Whispering Beast entry in particular. the note that it has been waiting in the same spot for days or weeks, completely motionless, and the only reason you'd know it's there is if you hear the voice. and the voice sounds like help.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#cal emmerich</span>
+        <span class="tag">#the whispering beast</span>
+        <span class="tag">#knowledge that was bought</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🔬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+            <div class="thread-text">the subtitle. "a field guide to the beasts of the deadlands." "collected and recorded by cal emmerich. wanderer, survivor, reluctant historian." <em>reluctant.</em> he didn't want to know this. he knows it anyway. that word is doing so much.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text">and "the first post-modern bestiary." he's aware he's inventing a genre for a world that shouldn't need one. that's grief wearing the shape of scholarship.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 88</button>
+        <button class="action-btn reblog">⟳ 55</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Priya / Whispers: Glass-Winged Scavenger lore -->
+    <div class="post accent-green" data-type="ic" data-fandom="whispers" data-faction="icchha" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🔬</div>
+        <div class="post-meta">
+          <div class="post-author green">Priya Verma</div>
+          <div class="post-subline">@priya.icchha · icchha · 8h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        the Glass-Winged Scavenger doesn't hunt. it <em>attracts</em>. its bioluminescence draws smaller creatures, which draws larger predators, which it then feeds on. it has positioned itself one step up the food chain from doing any work at all.<br><br>
+        this is not a predator. it's an ecosystem exploit. cal documents it with the precise tone of someone who deeply respects its methodology while also finding it deeply upsetting. "its affinity for such areas comes from its need to attract the more dangerous predators lurking in these forsaken cities, feeding off the chaos they cause."<br><br>
+        chaos as a resource. the creature doesn't cause the danger. it shows up where the danger already is and makes itself useful to itself. i have a spreadsheet about whether this is a metaphor.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#glass-winged scavenger</span>
+        <span class="tag">#cal emmerich</span>
+        <span class="tag">#chaos as resource</span>
+        <span class="tag">#ecosystem exploit</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 104</button>
+        <button class="action-btn reblog">⟳ 67</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ SECTION: TRADECRAFT + WHISPERS FANDOM ═══════════ -->
+
+    <div class="feed-divider">
+      <div class="feed-divider-line"></div>
+      <div class="feed-divider-label">// amora community</div>
+      <div class="feed-divider-line"></div>
+    </div>
+
+    <!-- @quietcourtyard (Eldric/Alistair archive) -->
+    <div class="post accent-cyan" data-type="fandom" data-fandom="amora" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">♟️</div>
+        <div class="post-meta">
+          <div class="post-author cyan">Soren Ashvale</div>
+          <div class="post-subline">@quietcourtyard · he/him · eldric & alistair archivist · 2h ago</div>
+        </div>
+        <div class="post-badge fandom">amora</div>
+      </div>
+      <div class="post-body">
+        the thing about "the quiet moments" that ruins me every time is that it has no conflict.<br><br>
+        there's no crisis in this story. no one arrives at the door. no danger. it's just two men moving through a morning in a home they built together, passing bread, adding honey, not needing to explain anything to each other. the whole story is proof of something — not that they survived, but that they <em>lived</em>. they didn't just endure amora's cruelty. they built a life in the middle of it. a whole, ordinary, unhurried life.<br><br>
+        "and alistair would look up, his smile as familiar as the home they had built together." i'm going to be thinking about that sentence for a long time.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#the quiet moments</span>
+        <span class="tag">#eldric and alistair</span>
+        <span class="tag">#a whole ordinary life</span>
+        <span class="tag">#no conflict needed</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🌾</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Vesper Laine</div>
+            <div class="thread-text">the nudging the bread back. the honey measured for both cups without asking. forty years of learning exactly how much. i can't.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">♟️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Soren Ashvale</div>
+            <div class="thread-text">the word the text uses for their morning routine is "ritual." not habit. ritual. they made something sacred out of an ordinary tuesday and i think about that constantly.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 8.3k</button>
+        <button class="action-btn reblog">⟳ 4.7k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @thechromaticcollective (symbolism blog) -->
+    <div class="post accent-purple" data-type="fandom" data-fandom="amora" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🌈</div>
+        <div class="post-meta">
+          <div class="post-author purple">Orin Blackthorn</div>
+          <div class="post-subline">@thechromaticcollective · they/them · symbol tracker · 4h ago</div>
+        </div>
+        <div class="post-badge fandom">amora</div>
+      </div>
+      <div class="post-body">
+        CHROMATIC PIN/BEAD/BUTTON MASTERPOST — compiling every instance in the collection<br><br>
+        📍 "a dance of defiance" — pin on the inside of the guard's glove. hidden from the room, visible only to cordelia. mutual recognition between two strangers.<br>
+        📍 "cordelia's song" — stark brushes the pin under his cloak. the bard clocks it anyway. her smile confirms she already knew.<br>
+        📍 "a knight's order" — the knight shows the band to eldric and alistair in firelight before leaving. no words. just: you are not alone and neither am i.<br>
+        📍 "the market's child" — a bead on twine pressed into ezra's hand. the first time they believe it's possible. for someone like them.<br><br>
+        the symbol doesn't belong to any one character. it travels. it finds people. it is a thing that moves through amora like a message the kingdom doesn't know is being sent.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#chromatic symbol</span>
+        <span class="tag">#it travels</span>
+        <span class="tag">#symbol analysis</span>
+        <span class="tag">#the pin the bead the band</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">📂</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Nell Ashby</div>
+            <div class="thread-text">the woman in "the market's child" takes it off her own wrist to give it away. she gives away the thing that marks her as known. to someone who needs it more than she needs to be recognized right now. i'm not well.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🌈</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Orin Blackthorn</div>
+            <div class="thread-text">and ezra doesn't know what it means yet. they just know it means something. the belief comes before the understanding. that's the whole thing.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 12.1k</button>
+        <button class="action-btn reblog">⟳ 7.8k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @velmirastreets (city-level worldbuilding) -->
+    <div class="post accent-orange" data-type="fandom" data-fandom="amora" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🏙️</div>
+        <div class="post-meta">
+          <div class="post-author orange">Cassia Vern</div>
+          <div class="post-subline">@velmirastreets · she/her · worldbuilder · 6h ago</div>
+        </div>
+        <div class="post-badge fandom">amora</div>
+      </div>
+      <div class="post-body">
+        something no one is talking about enough: every single story in this collection takes place in or within reach of velmira. the palace. the market. the apothecary. the knight's academy. the seaside. the boarding house on the outskirts.<br><br>
+        velmira is not the backdrop. velmira is the argument. it is a city that is genuinely beautiful, genuinely thriving, genuinely run by people trying to do right — and it is also a city where people can be dragged from their homes in the night. both things. in the same streets. the jasmine and the raids.<br><br>
+        the city is not the villain. the city is the place that has to change. and all these little stories are the cracks in it.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#velmira</span>
+        <span class="tag">#the city is the argument</span>
+        <span class="tag">#setting as theme</span>
+        <span class="tag">#worldbuilding</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 5.2k</button>
+        <button class="action-btn reblog">⟳ 3.0k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @wishingheweremicah (trans character appreciation) -->
+    <div class="post accent-purple" data-type="fandom" data-fandom="amora" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🦋</div>
+        <div class="post-meta">
+          <div class="post-author purple">Rue Calden</div>
+          <div class="post-subline">@wishingheweremicah · he/him · micah stan · 3h ago</div>
+        </div>
+        <div class="post-badge fandom">amora</div>
+      </div>
+      <div class="post-body">
+        "wish" is one of the most precise pieces of trans writing i have ever read and it's two pages long.<br><br>
+        mira/micah doesn't have a single moment of cinematic clarity. there's no scene where everything clicks into place. it's a word whispered to a mirror at eight. hair cut badly in a bathroom at thirteen. a name written in journal margins at fifteen. one person told at sixteen. slow. quiet. accumulating.<br><br>
+        and then: <em>"for the first time in his life, micah felt like he could breathe."</em><br><br>
+        luca doesn't ask why. doesn't ask for an explanation. doesn't say "are you sure." he asks: <em>what do you want me to call you?</em> that's it. that's all it took. one person who just asked the right question and waited.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#wish</span>
+        <span class="tag">#micah</span>
+        <span class="tag">#what do you want me to call you</span>
+        <span class="tag">#luca deserves everything</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🌾</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Vesper Laine</div>
+            <div class="thread-text">the charm on the necklace in "the son and daughter" is a butterfly. her own take on the family crest. she redesigned her own inheritance to fit herself. quietly. in her room. before anyone knew. i think about that a lot.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🦋</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Rue Calden</div>
+            <div class="thread-text">she kept the family. she changed the shape. that's the whole thing isn't it.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 14.6k</button>
+        <button class="action-btn reblog">⟳ 9.2k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @thegildedcouncilfiles (lore/politics theory) -->
+    <div class="post accent-yellow" data-type="fandom" data-fandom="amora" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">📜</div>
+        <div class="post-meta">
+          <div class="post-author yellow">Ixa Renfeld</div>
+          <div class="post-subline">@thegildedcouncilfiles · any/all · amora lore division · 1h ago</div>
+        </div>
+        <div class="post-badge fandom">amora</div>
+      </div>
+      <div class="post-body">
+        unpopular opinion: queen ismelda is the most morally complicated character in the collection and the collection is not entirely sure she's wrong.<br><br>
+        she let two women dance at the summer ball rather than stop them. she swore her daughter to silence about the First Knight's history. she built a kingdom of genuine care and genuine suppression at the same time. she looks at things she cannot yet change and chooses to manage them instead.<br><br>
+        the text never condemns her for this. it also never absolves her. it just shows her standing in the doorway of a room full of quiet revolution and <em>choosing to be slow</em>. that's not a villain. that's something harder to write and harder to reckon with. a person who loves the right things and is not yet brave enough to break the right things.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#queen ismelda</span>
+        <span class="tag">#a summers dance</span>
+        <span class="tag">#the secret of the queens</span>
+        <span class="tag">#choosing to be slow</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🏙️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--neon-orange)">Cassia Vern</div>
+            <div class="thread-text">the fact that she says nothing when the two women dance and the crowd reads it as disapproval — and maybe it is. maybe it's also the closest she can get to permission. that ambiguity is intentional and i will fight about it.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">📜</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Ixa Renfeld</div>
+            <div class="thread-text">"not accepted. not yet. but not denied." the text earns that sentence. it earns it and then it leaves it sitting there and doesn't tell you how to feel about it. devastating craft.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 6.9k</button>
+        <button class="action-btn reblog">⟳ 4.1k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @romanticless (aromantic rep appreciation) -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="amora" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">📚</div>
+        <div class="post-meta">
+          <div class="post-author dim">Sable Orin</div>
+          <div class="post-subline">@primrose-fallen · they/them · also in this fandom now · 8h ago</div>
+        </div>
+        <div class="post-badge fandom">amora</div>
+      </div>
+      <div class="post-body">
+        okay i came for the elara discourse and got ambushed by "romantic-less"<br><br>
+        eli sits with the question of whether he'll ever feel that way about anyone and the story doesn't answer it. it ends with <em>"maybe this was who he was."</em> no resolution. no name for it yet. just a boy alone at night deciding for the first time that maybe he isn't broken. maybe he's just. himself.<br><br>
+        the collection has so many stories about love. and it made room for one that isn't about love at all. it's about the absence of that particular longing and the terrifying, quiet, enormous relief of deciding the absence might be okay. they put it in the same book and didn't footnote it. they just put it there. equal weight.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#romantic-less</span>
+        <span class="tag">#eli</span>
+        <span class="tag">#maybe this was who he was</span>
+        <span class="tag">#aromantic rep</span>
+        <span class="tag">#equal weight</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 11.4k</button>
+        <button class="action-btn reblog">⟳ 7.3k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ SECTION: TRADECRAFT FANDOM ═══════════ -->
+
+    <div class="feed-divider">
+      <div class="feed-divider-line"></div>
+      <div class="feed-divider-label">// tradecraft community</div>
+      <div class="feed-divider-line"></div>
+    </div>
+
+    <!-- @sweetreliefshop (lyra's trade fair) -->
+    <div class="post accent-yellow" data-type="fandom" data-fandom="tradecraft" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🍬</div>
+        <div class="post-meta">
+          <div class="post-author yellow">Bex Thurlow</div>
+          <div class="post-subline">@sweetreliefshop · she/her · lyra primley archivist · 1h ago</div>
+        </div>
+        <div class="post-badge fandom">tradecraft</div>
+      </div>
+      <div class="post-body">
+        the trade fair chapter is the emotional climax of the book and i will be hearing zero arguments to the contrary<br><br>
+        lyra doesn't defeat anyone. she doesn't unlock a secret power. she doesn't get a grand speech. she stands behind a table with carefully labeled jars and watches a stranger pop a piece of mint taffy in their mouth and <em>sigh with relief.</em><br><br>
+        that's it. that's the whole payoff. a stranger's body feeling slightly better because of something lyra made. after a book about a girl whose own body stopped cooperating, she figured out how to give other people what she needed and couldn't have. that's not a small ending. that's enormous.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#tradecraft</span>
+        <span class="tag">#lyra primley</span>
+        <span class="tag">#sweet relief</span>
+        <span class="tag">#the trade fair</span>
+        <span class="tag">#that's enormous</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">📐</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Sable Orin</div>
+            <div class="thread-text">the napkin with "grape, but like, healing grape, please??" from the construction student. someone asked her for a custom order at a job corps fair. they took her seriously. i cried about a napkin.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🍬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Bex Thurlow</div>
+            <div class="thread-text">and she WRITES IT DOWN. she keeps that napkin. it goes in the journal. someone asked her for grape and she already knows she's going to make grape.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 7.4k</button>
+        <button class="action-btn reblog">⟳ 4.2k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @hannamontgomery-deserves-the-world -->
+    <div class="post accent-orange" data-type="fandom" data-fandom="tradecraft" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">☀️</div>
+        <div class="post-meta">
+          <div class="post-author orange">Paz Linares</div>
+          <div class="post-subline">@hanna-deserves-the-world · any pronouns · hanna stan · 3h ago</div>
+        </div>
+        <div class="post-badge fandom">tradecraft</div>
+      </div>
+      <div class="post-body">
+        okay everyone is talking about lyra (as they should) but can we please discuss hanna montgomery for one moment<br><br>
+        hanna bounces. hanna grins. hanna is described as having "unrelenting cheerfulness" like the narrative gently apologizes for her. but she spots the shift in lyra's mood immediately and adjusts. she says "we all have our things" in a way that is clearly speaking from experience. she <em>makes space</em> for people who need it without making them feel like they need it.<br><br>
+        hanna didn't come to job corps because she's fine. nobody there is fine. and she chose to be warm anyway. that's a whole character in four scenes and i want her whole story.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#tradecraft</span>
+        <span class="tag">#hanna montgomery</span>
+        <span class="tag">#we all have our things</span>
+        <span class="tag">#she's not fine either</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 5.9k</button>
+        <button class="action-btn reblog">⟳ 3.3k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- @burnedoutprodigy (lyra & the old magical world) -->
+    <div class="post accent-purple" data-type="fandom" data-fandom="tradecraft" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">✨</div>
+        <div class="post-meta">
+          <div class="post-author purple">Wren Callowell</div>
+          <div class="post-subline">@fennicsmossygarden · she/her · visiting from sop · 5h ago</div>
+        </div>
+        <div class="post-badge fandom">tradecraft</div>
+      </div>
+      <div class="post-body">
+        crossover observation as a shadows of primrose person stepping into tradecraft:<br><br>
+        both books are about kids who were exceptional at magic and then weren't. but they go to completely different places with it. fennic's power becomes dangerous and silent and strange. lyra's power became painful and finite and ordinary.<br><br>
+        fennic's exceptionalism is still there, just wrong. lyra's is gone. traded for something quieter. she looks at the TAR achievement chart with its little broom icon and thinks about the girl who was crafting custom enchantments at eleven and doesn't cry. she just sits down slowly because her joints hurt. that flatness is doing more than grief ever could.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#tradecraft</span>
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#lyra primley</span>
+        <span class="tag">#fennic</span>
+        <span class="tag">#exceptionalism tax</span>
+        <span class="tag">#crossover analysis</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🍬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Bex Thurlow</div>
+            <div class="thread-text">"the same magic that had made her exceptional had chewed through her body like a parasite." the word parasite. it lived inside her. it used her. it left. that framing is doing something brutal and quiet.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">✨</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Wren Callowell</div>
+            <div class="thread-text">the magical world called what happened to lyra "burnout" and moved on. she is living in the aftermath of something the world named and forgot. the name made it easier to stop caring.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 8.8k</button>
+        <button class="action-btn reblog">⟳ 5.1k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ═══════════ SECTION: WHISPERS FANDOM + AUTHOR ═══════════ -->
+
+    <div class="feed-divider">
+      <div class="feed-divider-line"></div>
+      <div class="feed-divider-label">// whispers in the concrete</div>
+      <div class="feed-divider-line"></div>
+    </div>
+
+    <!-- ColbyJackCh33se — author cryptic post 1 -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="whispers" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🧀</div>
+        <div class="post-meta">
+          <div class="post-author dim">ColbyJackCh33se</div>
+          <div class="post-subline">@colbyjackch33se · they/them · author · 47m ago</div>
+        </div>
+        <div class="post-badge fandom">whispers</div>
+      </div>
+      <div class="post-body">
+        fun fact about the whispering beast: the voice it uses isn't random.<br><br>
+        it learns the voice it needs from whatever came before. it didn't mimic the voice of a stranger in harrowsbrook.<br><br>
+        cal knows this. he wrote around it.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#the whispering beast</span>
+        <span class="tag">#harrowsbrook</span>
+        <span class="tag">#cal knows</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 3.1k</button>
+        <button class="action-btn reblog">⟳ 2.4k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ColbyJackCh33se — author cryptic post 2 -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="whispers" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🧀</div>
+        <div class="post-meta">
+          <div class="post-author dim">ColbyJackCh33se</div>
+          <div class="post-subline">@colbyjackch33se · they/them · author · 2h ago</div>
+        </div>
+        <div class="post-badge fandom">whispers</div>
+      </div>
+      <div class="post-body">
+        someone asked me why cal calls himself a "reluctant historian" when he clearly put a lot of work into the book.<br><br>
+        he put the work in <em>because</em> of the reluctance. not despite it.<br><br>
+        there's a difference between wanting to document something and needing to. cal needed to. the book exists so that what happened to him and the people he traveled with becomes useful to someone. becomes <em>survivable</em> for someone else.<br><br>
+        he doesn't talk about the people he traveled with in the introduction. notice that.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#cal emmerich</span>
+        <span class="tag">#reluctant historian</span>
+        <span class="tag">#the people he doesn't mention</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">📡</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">Cass Veyra</div>
+            <div class="thread-text">WAIT. "he doesn't talk about the people he traveled with." i reread the intro. he says "wanderer, survivor." not "lone wanderer." he was with people. some of them aren't survivors.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🧀</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">ColbyJackCh33se</div>
+            <div class="thread-text">i don't answer lore questions but i will say: cass has a spreadsheet energy i respect.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 5.7k</button>
+        <button class="action-btn reblog">⟳ 4.0k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ColbyJackCh33se — author cryptic post 3 -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="whispers" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🧀</div>
+        <div class="post-meta">
+          <div class="post-author dim">ColbyJackCh33se</div>
+          <div class="post-subline">@colbyjackch33se · they/them · author · 5h ago</div>
+        </div>
+        <div class="post-badge fandom">whispers</div>
+      </div>
+      <div class="post-body">
+        the garden horror entry has an error in it.<br><br>
+        cal knows it has an error. he left it there on purpose.<br><br>
+        i'm not telling you which part is wrong.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#garden horror</span>
+        <span class="tag">#there's an error</span>
+        <span class="tag">#intentional</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 9.2k</button>
+        <button class="action-btn reblog">⟳ 7.6k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ColbyJackCh33se — author cryptic post 4 -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="whispers" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🧀</div>
+        <div class="post-meta">
+          <div class="post-author dim">ColbyJackCh33se</div>
+          <div class="post-subline">@colbyjackch33se · they/them · author · 8h ago</div>
+        </div>
+        <div class="post-badge fandom">whispers</div>
+      </div>
+      <div class="post-body">
+        someone made a map of every creature habitat in the book and noticed something.<br><br>
+        good.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#habitat map</span>
+        <span class="tag">#good</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🗂️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">Tobias Fell</div>
+            <div class="thread-text">WHAT did they notice. what did they notice. answer the question</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🧀</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">ColbyJackCh33se</div>
+            <div class="thread-text">i notice things too, tobias.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 14.3k</button>
+        <button class="action-btn reblog">⟳ 11.1k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- ColbyJackCh33se — author cryptic post 5 -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="whispers" data-has-thread="false">
+      <div class="post-header">
+        <div class="post-avatar">🧀</div>
+        <div class="post-meta">
+          <div class="post-author dim">ColbyJackCh33se</div>
+          <div class="post-subline">@colbyjackch33se · they/them · author · 12h ago</div>
+        </div>
+        <div class="post-badge fandom">whispers</div>
+      </div>
+      <div class="post-body">
+        to clarify: cal emmerich wrote this book to be found.<br><br>
+        not read. found.<br><br>
+        there's a difference.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#cal emmerich</span>
+        <span class="tag">#written to be found</span>
+        <span class="tag">#not read</span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 18.7k</button>
+        <button class="action-btn reblog">⟳ 14.9k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- Fandom analysis response to ColbyJack -->
+    <div class="post accent-dim" data-type="fandom" data-fandom="whispers" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">📡</div>
+        <div class="post-meta">
+          <div class="post-author dim">Cass Veyra</div>
+          <div class="post-subline">@deadlightarchive · she/her · connection theory · 13h ago</div>
+        </div>
+        <div class="post-badge fandom">whispers</div>
+      </div>
+      <div class="post-body">
+        okay i am collecting everything @colbyjackch33se has posted in one place because i think they are building toward something<br><br>
+        <strong>what we know so far:</strong><br>
+        — the whispering beast uses a specific voice, not a random one. cal knows which voice. he didn't write it.<br>
+        — cal traveled with people. he doesn't name them. not all of them survived.<br>
+        — there is a deliberate error in the garden horror entry.<br>
+        — the creature habitats form a pattern on a map.<br>
+        — the book was written to be <em>found</em>, not read.<br><br>
+        <strong>my current theory:</strong> the book is a trail. cal didn't survive to deliver it in person. he built it to lead whoever found it somewhere specific. the "error" in the garden horror entry is a coordinate or a direction. the habitat map is the route.<br><br>
+        colby if you're reading this: i have a spreadsheet.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#whispers</span>
+        <span class="tag">#cal emmerich</span>
+        <span class="tag">#author breadcrumbs</span>
+        <span class="tag">#the book is a trail</span>
+        <span class="tag">#dead drop theory</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🧀</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">ColbyJackCh33se</div>
+            <div class="thread-text">.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 22.4k</button>
+        <button class="action-btn reblog">⟳ 18.2k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+
+    <!-- ═══════════ SECTION: HATER POSTS ═══════════ -->
+
+    <div class="feed-divider">
+      <div class="feed-divider-line"></div>
+      <div class="feed-divider-label">// haters (who know too much)</div>
+      <div class="feed-divider-line"></div>
+    </div>
+
+    <!-- HATER POST 1: Nadim / Harbingers — hates the Ellie/Harlow ship -->
+    <div class="post accent-cyan" data-type="ic" data-fandom="harbingers" data-faction="baqaya" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">📖</div>
+        <div class="post-meta">
+          <div class="post-author cyan">Nadim Al-Hakim</div>
+          <div class="post-subline">@nadim.archive · baqaya · 2h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        i'm going to say something that's going to make the ellie/harlow shippers very upset with me and i want everyone to know that i have read every single piece of evidence for this ship, i have read the metas, i have read the 40k fic that won three awards, and i am saying this in full possession of the facts:<br><br>
+        harlow looks at ellie like she's a <em>problem he's already solved.</em> that is not love. that is not even attraction. that is project management with eye contact. and she deserves someone who looks at her like the question is still open. like she could still surprise them. like she's not already filed under "handled."<br><br>
+        <strong>he called her "resourceful" in chapter nine. resourceful. like she's a multi-tool.</strong><br><br>
+        i cannot do this. i genuinely cannot do this. i've reread that chapter six times and every time i come away more furious. the ship is right there in the subtext and the subtext is <em>wrong</em> and i know too much about it to stop caring and that's the worst part.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#harbingers</span>
+        <span class="tag">#ellie gage</span>
+        <span class="tag">#anti ellie/harlow</span>
+        <span class="tag">#she deserves better</span>
+        <span class="tag">#i've read all the fic and i'm still mad</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🏗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--red)">Amina Brooks</div>
+            <div class="thread-text">nadim "project management with eye contact" is the best description of harlow i have ever read and i say this as someone who also ships it</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text">i knew it was accurate before i finished typing it and it made me feel worse, not better. this is not a good morning.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 312</button>
+        <button class="action-btn reblog">⟳ 201</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- HATER POST 2: Élodie / Shadows of Primrose — hates the "callum is the protagonist" discourse -->
+    <div class="post accent-magenta" data-type="ic" data-fandom="shadowsofprimrose" data-faction="acre" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">⚗️</div>
+        <div class="post-meta">
+          <div class="post-author magenta">Élodie Moreau</div>
+          <div class="post-subline">@elodie.encrypted · âcre · 5h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        the "callum is the heart of shadows of primrose" discourse has found me in my home and i will be responding.<br><br>
+        callum is <em>fine.</em> callum is competent and occasionally interesting and the author clearly loves him and good for the author. however: elara is running a seventeen-move operation in the background of every single scene callum is in, and the entire fandom is so busy watching him fumble toward self-knowledge that they have apparently not noticed. she is not his foil. she is not his rival. <strong>she is the actual story and callum is her cover.</strong><br><br>
+        "i'll remember you said that." she is keeping receipts. on a child. who wronged her once. she has obsidian-tier memory and she is using it to <em>archive her grievances</em> and people are out here crying about callum's character growth while elara is quietly building infrastructure. i am so tired. i know everything about this book and it has made me unreasonable.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#elara</span>
+        <span class="tag">#anti callum-centric readings</span>
+        <span class="tag">#she is the actual story</span>
+        <span class="tag">#i am so tired</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🌑</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Sable Orin</div>
+            <div class="thread-text">ÉLODIE. "callum is her cover." i am going to print this out and mail it to the author.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">⚗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+            <div class="thread-text">please do. i want it on record.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 1.4k</button>
+        <button class="action-btn reblog">⟳ 882</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- HATER POST 3: Mateo / The Hollow — hates the "tadhg is fine" fandom consensus -->
+    <div class="post accent-yellow" data-type="ic" data-fandom="thehollow" data-faction="dulzor" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🩺</div>
+        <div class="post-meta">
+          <div class="post-author yellow">Mateo Reyes</div>
+          <div class="post-subline">@mateo.steadyhands · dulzor · 8h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        "tadhg is fine" is a fandom coping mechanism and i will not participate in it.<br><br>
+        let me describe tadhg o'sidhe to you. he catalogs creatures in a forest that is actively trying to absorb him. he names them. <em>he gives them names.</em> he documents a glass-furred squirrel's possible diet with a question mark and leaves the question open for whoever comes after him, meaning he has already accepted he will not be there to find out. he brought dried fruit as a peace offering to a wound that learned to move through the world.<br><br>
+        <strong>this man has no survival instinct. he has only curiosity and optimism and those are not the same thing.</strong><br><br>
+        the lore ticker says "tadhg status: probably fine" and every time i see it i feel something awful happen in my chest. he is not probably fine. i'm a medic. i know what "probably fine" means in the field. it means we haven't found out yet.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#thehollow</span>
+        <span class="tag">#tadhg o'sidhe</span>
+        <span class="tag">#he is NOT probably fine</span>
+        <span class="tag">#the lore ticker is a lie</span>
+        <span class="tag">#i know what i'm talking about</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🎵</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--blue)">Thiago Carvalho</div>
+            <div class="thread-text">mateo i would like you to know that you have made the lore ticker worse for me personally</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🩺</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--yellow)">Mateo Reyes</div>
+            <div class="thread-text">good. we should all feel worse about this. collectively. as a community.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 847</button>
+        <button class="action-btn reblog">⟳ 529</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- HATER POST 4: Amina / Harbingers — hates the Silent City ambiguous ending -->
+    <div class="post accent-red" data-type="ic" data-fandom="harbingers" data-faction="semper" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🏗️</div>
+        <div class="post-meta">
+          <div class="post-author red">Amina Brooks</div>
+          <div class="post-subline">@amina.semper · semper · 3h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        i'm not going to pretend the <em>Silent City</em> ending is good. i'm not going to do that.<br><br>
+        the author built a 300-page structural argument — cause, consequence, system, collapse — and then ended it with a door. a door, slightly open, light coming from somewhere unspecified, and the narrator choosing not to describe what's inside. that's not resonant ambiguity. <strong>that's an architect leaving a building without a roof and calling it a skylight.</strong><br><br>
+        i know what the fandom theory is. i've read all fourteen versions of it. i helped write one of them, which i now regret. the hum is not a resolution. the alley man's silence is not a resolution. open doors are not architecture.<br><br>
+        i've read chapter seven four times this week because it's the last chapter where the structure holds and i cannot stop trying to find the load-bearing wall the author decided not to build.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#harbingers</span>
+        <span class="tag">#silent city</span>
+        <span class="tag">#anti ambiguous ending</span>
+        <span class="tag">#a door is not a resolution</span>
+        <span class="tag">#i helped write one of the theories and i regret it</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">📡</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--text-dim)">Cass Veyra</div>
+            <div class="thread-text">amina the ambiguity IS the structure. the door being open is load-bearing. it's holding the reader's position in the text.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🏗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--red)">Amina Brooks</div>
+            <div class="thread-text">i've heard this argument. i've made this argument. i don't believe it. i want a wall.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 563</button>
+        <button class="action-btn reblog">⟳ 334</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- HATER POST 5: Thiago / Amora — hates the "Cordelia and Stark are platonic" reading -->
+    <div class="post accent-blue" data-type="ic" data-fandom="amora" data-faction="saudade" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🎵</div>
+        <div class="post-meta">
+          <div class="post-author blue">Thiago Carvalho</div>
+          <div class="post-subline">@thiago.saudade · saudade · 6h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        i respect the "cordelia and stark are just friends" reading. i understand it. i know where it comes from and i know the textual basis and i am going to spend the next four paragraphs absolutely taking it apart.<br><br>
+        <em>stark love.</em> that is the title of the story. stark. love. the author named a story after this man and the feeling he generates in the person he's standing next to and there is a substantial portion of this fandom that has decided to read it as mutual professional respect. they're in a garden. under a pear tree. whispering about how much time they have. there are exactly two reasons you whisper about time in a garden under a pear tree and one of them is operational planning and <strong>that one is also romantic.</strong><br><br>
+        i've read every "friends who do crimes together" essay. i've read them with an open heart. and then i go back to "for as long as we dare" and i want to ask everyone: dare what, exactly. dare what.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#amora</span>
+        <span class="tag">#cordelia and stark</span>
+        <span class="tag">#anti platonic reading</span>
+        <span class="tag">#stark love</span>
+        <span class="tag">#dare what exactly</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">📖</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+            <div class="thread-text">"that one is also romantic" is going to live in my head for weeks thiago</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">⚗️</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+            <div class="thread-text">operational planning is the most romantic thing two people can do together. thiago and i are in agreement on this.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🎵</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--blue)">Thiago Carvalho</div>
+            <div class="thread-text">i didn't expect to agree with élodie today but here we are. under the pear tree. daring things.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 2.1k</button>
+        <button class="action-btn reblog">⟳ 1.4k</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+    <!-- HATER POST 6: Priya / Shadows of Primrose — hates fandom trusting the Well -->
+    <div class="post accent-green" data-type="ic" data-fandom="shadowsofprimrose" data-faction="icchha" data-has-thread="true">
+      <div class="post-header">
+        <div class="post-avatar">🔬</div>
+        <div class="post-meta">
+          <div class="post-author green">Priya Verma</div>
+          <div class="post-subline">@priya.icchha · icchha · 1h ago</div>
+        </div>
+        <div class="post-badge ic">ic</div>
+      </div>
+      <div class="post-body">
+        i'm going to need the fandom to stop treating the Well of Revelation as a reliable narrator.<br><br>
+        it uses the word <em>chosen</em> without attribution. it refers to fennic in the third person in a chapter where fennic is the supposed speaker. it describes a timeline that is off by nine months from every other established date in the series. <strong>the Well is doing something. the Well is lying, or the Well is being used, or the Well doesn't know what it is — and those are three completely different problems.</strong><br><br>
+        and yet! every theory post i read takes the Well's testimony at face value and builds upward. elaborate structures on a foundation i have documented is cracked. i have a spreadsheet with twelve tabs. i've read the Well chapter nineteen times. i don't hate it — i find it genuinely fascinating — but i hate what the fandom is doing with it, which is trusting it, and i hate that i know too much about this to let it go.<br><br>
+        the Well is not a source. it is evidence.
+      </div>
+      <div class="post-tags">
+        <span class="tag">#shadowsofprimrose</span>
+        <span class="tag">#the well of revelation</span>
+        <span class="tag">#the well is not reliable</span>
+        <span class="tag">#twelve tabs</span>
+        <span class="tag">#it is evidence not testimony</span>
+      </div>
+      <div class="thread-chain">
+        <div class="thread-reply">
+          <div class="thread-avatar">🌿</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Wren Callowell</div>
+            <div class="thread-text">priya i have been building a well-based theory for six months and you have just made me question everything i love</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🔬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+            <div class="thread-text">good. your theory should be able to survive scrutiny. send it to me. i'll add it to the spreadsheet.</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🌿</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--purple-mid)">Wren Callowell</div>
+            <div class="thread-text">i don't know if that's reassuring or threatening</div>
+          </div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-avatar">🔬</div>
+          <div class="thread-content">
+            <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+            <div class="thread-text">it's neither. it's methodology.</div>
+          </div>
+        </div>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn upvote">♡ 748</button>
+        <button class="action-btn reblog">⟳ 481</button>
+        <button class="action-btn reply-btn">↩ reply</button>
+      </div>
+    </div>
+
+  
+<!-- ═══════════ HATER POSTS — paste before </main> ═══════════ -->
+
+<!-- HATER POST 1: Nadim / Harbingers — hates the Ellie/Harlow ship -->
+<div class="post accent-cyan" data-type="ic" data-fandom="harbingers" data-faction="baqaya" data-has-thread="true">
+  <div class="post-header">
+    <div class="post-avatar">📖</div>
+    <div class="post-meta">
+      <div class="post-author cyan">Nadim Al-Hakim</div>
+      <div class="post-subline">@nadim.archive · baqaya · 2h ago</div>
+    </div>
+    <div class="post-badge ic">ic</div>
+  </div>
+  <div class="post-body">
+    i'm going to say something that's going to make the ellie/harlow shippers very upset with me and i want everyone to know that i have read every single piece of evidence for this ship, i have read the metas, i have read the 40k fic that won three awards, and i am saying this in full possession of the facts:<br><br>
+    harlow looks at ellie like she's a <em>problem he's already solved.</em> that is not love. that is not even attraction. that is project management with eye contact. and she deserves someone who looks at her like the question is still open. like she could still surprise them. like she's not already filed under "handled."<br><br>
+    <strong>he called her "resourceful" in chapter nine. resourceful. like she's a multi-tool.</strong><br><br>
+    i cannot do this. i genuinely cannot do this. i've reread that chapter six times and every time i come away more furious. the ship is right there in the subtext and the subtext is <em>wrong</em> and i know too much about it to stop caring and that's the worst part.
+  </div>
+  <div class="post-tags">
+    <span class="tag">#harbingers</span>
+    <span class="tag">#ellie gage</span>
+    <span class="tag">#anti ellie/harlow</span>
+    <span class="tag">#she deserves better</span>
+    <span class="tag">#i've read all the fic and i'm still mad</span>
+  </div>
+  <div class="thread-chain">
+    <div class="thread-reply">
+      <div class="thread-avatar">🏗️</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--red)">Amina Brooks</div>
+        <div class="thread-text">nadim "project management with eye contact" is the best description of harlow i have ever read and i say this as someone who also ships it</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">📖</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+        <div class="thread-text">i knew it was accurate before i finished typing it and it made me feel worse, not better. this is not a good morning.</div>
+      </div>
+    </div>
+  </div>
+  <div class="post-actions">
+    <button class="action-btn upvote">♡ 312</button>
+    <button class="action-btn reblog">⟳ 201</button>
+    <button class="action-btn reply-btn">↩ reply</button>
+  </div>
+</div>
+
+<!-- HATER POST 2: Élodie / Shadows of Primrose — hates the "callum is the protagonist" discourse -->
+<div class="post accent-magenta" data-type="ic" data-fandom="shadowsofprimrose" data-faction="acre" data-has-thread="true">
+  <div class="post-header">
+    <div class="post-avatar">⚗️</div>
+    <div class="post-meta">
+      <div class="post-author magenta">Élodie Moreau</div>
+      <div class="post-subline">@elodie.encrypted · âcre · 5h ago</div>
+    </div>
+    <div class="post-badge ic">ic</div>
+  </div>
+  <div class="post-body">
+    the "callum is the heart of shadows of primrose" discourse has found me in my home and i will be responding.<br><br>
+    callum is <em>fine.</em> callum is competent and occasionally interesting and the author clearly loves him and good for the author. however: elara is running a seventeen-move operation in the background of every single scene callum is in, and the entire fandom is so busy watching him fumble toward self-knowledge that they have apparently not noticed. she is not his foil. she is not his rival. <strong>she is the actual story and callum is her cover.</strong><br><br>
+    "i'll remember you said that." she is keeping receipts. on a child. who wronged her once. she has obsidian-tier memory and she is using it to <em>archive her grievances</em> and people are out here crying about callum's character growth while elara is quietly building infrastructure. i am so tired. i know everything about this book and it has made me unreasonable.
+  </div>
+  <div class="post-tags">
+    <span class="tag">#shadowsofprimrose</span>
+    <span class="tag">#elara</span>
+    <span class="tag">#anti callum-centric readings</span>
+    <span class="tag">#she is the actual story</span>
+    <span class="tag">#i am so tired</span>
+  </div>
+  <div class="thread-chain">
+    <div class="thread-reply">
+      <div class="thread-avatar">🌑</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--purple-mid)">Sable Orin</div>
+        <div class="thread-text">ÉLODIE. "callum is her cover." i am going to print this out and mail it to the author.</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">⚗️</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+        <div class="thread-text">please do. i want it on record.</div>
+      </div>
+    </div>
+  </div>
+  <div class="post-actions">
+    <button class="action-btn upvote">♡ 1.4k</button>
+    <button class="action-btn reblog">⟳ 882</button>
+    <button class="action-btn reply-btn">↩ reply</button>
+  </div>
+</div>
+
+<!-- HATER POST 3: Mateo / The Hollow — hates the "tadhg is fine" fandom consensus -->
+<div class="post accent-yellow" data-type="ic" data-fandom="thehollow" data-faction="dulzor" data-has-thread="true">
+  <div class="post-header">
+    <div class="post-avatar">🩺</div>
+    <div class="post-meta">
+      <div class="post-author yellow">Mateo Reyes</div>
+      <div class="post-subline">@mateo.steadyhands · dulzor · 8h ago</div>
+    </div>
+    <div class="post-badge ic">ic</div>
+  </div>
+  <div class="post-body">
+    "tadhg is fine" is a fandom coping mechanism and i will not participate in it.<br><br>
+    let me describe tadhg o'sidhe to you. he catalogs creatures in a forest that is actively trying to absorb him. he names them. <em>he gives them names.</em> he documents a glass-furred squirrel's possible diet with a question mark and leaves the question open for whoever comes after him, meaning he has already accepted he will not be there to find out. he brought dried fruit as a peace offering to a wound that learned to move through the world.<br><br>
+    <strong>this man has no survival instinct. he has only curiosity and optimism and those are not the same thing.</strong><br><br>
+    the lore ticker says "tadhg status: probably fine" and every time i see it i feel something awful happen in my chest. he is not probably fine. i'm a medic. i know what "probably fine" means in the field. it means we haven't found out yet.
+  </div>
+  <div class="post-tags">
+    <span class="tag">#thehollow</span>
+    <span class="tag">#tadhg o'sidhe</span>
+    <span class="tag">#he is NOT probably fine</span>
+    <span class="tag">#the lore ticker is a lie</span>
+    <span class="tag">#i know what i'm talking about</span>
+  </div>
+  <div class="thread-chain">
+    <div class="thread-reply">
+      <div class="thread-avatar">🎵</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--blue)">Thiago Carvalho</div>
+        <div class="thread-text">mateo i would like you to know that you have made the lore ticker worse for me personally</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">🩺</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--yellow)">Mateo Reyes</div>
+        <div class="thread-text">good. we should all feel worse about this. collectively. as a community.</div>
+      </div>
+    </div>
+  </div>
+  <div class="post-actions">
+    <button class="action-btn upvote">♡ 847</button>
+    <button class="action-btn reblog">⟳ 529</button>
+    <button class="action-btn reply-btn">↩ reply</button>
+  </div>
+</div>
+
+<!-- HATER POST 4: Amina / Harbingers — hates the author's decision to end Silent City on ambiguity -->
+<div class="post accent-red" data-type="ic" data-fandom="harbingers" data-faction="semper" data-has-thread="true">
+  <div class="post-header">
+    <div class="post-avatar">🏗️</div>
+    <div class="post-meta">
+      <div class="post-author red">Amina Brooks</div>
+      <div class="post-subline">@amina.semper · semper · 3h ago</div>
+    </div>
+    <div class="post-badge ic">ic</div>
+  </div>
+  <div class="post-body">
+    i'm not going to pretend the <em>Silent City</em> ending is good. i'm not going to do that.<br><br>
+    the author built a 300-page structural argument — cause, consequence, system, collapse — and then ended it with a door. a door, slightly open, light coming from somewhere unspecified, and the narrator choosing not to describe what's inside. that's not resonant ambiguity. <strong>that's an architect leaving a building without a roof and calling it a skylight.</strong><br><br>
+    i know what the fandom theory is. i've read all fourteen versions of it. i helped write one of them, which i now regret. the hum is not a resolution. the alley man's silence is not a resolution. open doors are not architecture.<br><br>
+    i've read chapter seven four times this week because it's the last chapter where the structure holds and i cannot stop trying to find the load-bearing wall the author decided not to build.
+  </div>
+  <div class="post-tags">
+    <span class="tag">#harbingers</span>
+    <span class="tag">#silent city</span>
+    <span class="tag">#anti ambiguous ending</span>
+    <span class="tag">#a door is not a resolution</span>
+    <span class="tag">#i helped write one of the theories and i regret it</span>
+  </div>
+  <div class="thread-chain">
+    <div class="thread-reply">
+      <div class="thread-avatar">📡</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--text-dim)">Cass Veyra</div>
+        <div class="thread-text">amina the ambiguity IS the structure. the door being open is load-bearing. it's holding the reader's position in the text.</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">🏗️</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--red)">Amina Brooks</div>
+        <div class="thread-text">i've heard this argument. i've made this argument. i don't believe it. i want a wall.</div>
+      </div>
+    </div>
+  </div>
+  <div class="post-actions">
+    <button class="action-btn upvote">♡ 563</button>
+    <button class="action-btn reblog">⟳ 334</button>
+    <button class="action-btn reply-btn">↩ reply</button>
+  </div>
+</div>
+
+<!-- HATER POST 5: Thiago / Amora — hates the "Cordelia and Stark are platonic" reading -->
+<div class="post accent-blue" data-type="ic" data-fandom="amora" data-faction="saudade" data-has-thread="true">
+  <div class="post-header">
+    <div class="post-avatar">🎵</div>
+    <div class="post-meta">
+      <div class="post-author blue">Thiago Carvalho</div>
+      <div class="post-subline">@thiago.saudade · saudade · 6h ago</div>
+    </div>
+    <div class="post-badge ic">ic</div>
+  </div>
+  <div class="post-body">
+    i respect the "cordelia and stark are just friends" reading. i understand it. i know where it comes from and i know the textual basis and i am going to spend the next four paragraphs absolutely taking it apart.<br><br>
+    <em>stark love.</em> that is the title of the story. stark. love. the author named a story after this man and the feeling he generates in the person he's standing next to and there is a substantial portion of this fandom that has decided to read it as mutual professional respect. they're in a garden. under a pear tree. whispering about how much time they have. there are exactly two reasons you whisper about time in a garden under a pear tree and one of them is operational planning and <strong>that one is also romantic.</strong><br><br>
+    i've read every "friends who do crimes together" essay. i've read them with an open heart. and then i go back to "for as long as we dare" and i want to ask everyone: dare what, exactly. dare what.
+  </div>
+  <div class="post-tags">
+    <span class="tag">#amora</span>
+    <span class="tag">#cordelia and stark</span>
+    <span class="tag">#anti platonic reading</span>
+    <span class="tag">#stark love</span>
+    <span class="tag">#dare what exactly</span>
+  </div>
+  <div class="thread-chain">
+    <div class="thread-reply">
+      <div class="thread-avatar">📖</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--cyan)">Nadim Al-Hakim</div>
+        <div class="thread-text">"that one is also romantic" is going to live in my head for weeks thiago</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">⚗️</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--magenta)">Élodie Moreau</div>
+        <div class="thread-text">operational planning is the most romantic thing two people can do together. thiago and i are in agreement on this.</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">🎵</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--blue)">Thiago Carvalho</div>
+        <div class="thread-text">i didn't expect to agree with élodie today but here we are. under the pear tree. daring things.</div>
+      </div>
+    </div>
+  </div>
+  <div class="post-actions">
+    <button class="action-btn upvote">♡ 2.1k</button>
+    <button class="action-btn reblog">⟳ 1.4k</button>
+    <button class="action-btn reply-btn">↩ reply</button>
+  </div>
+</div>
+
+<!-- HATER POST 6: Priya / Shadows of Primrose — hates the fandom's treatment of the Well -->
+<div class="post accent-green" data-type="ic" data-fandom="shadowsofprimrose" data-faction="icchha" data-has-thread="true">
+  <div class="post-header">
+    <div class="post-avatar">🔬</div>
+    <div class="post-meta">
+      <div class="post-author green">Priya Verma</div>
+      <div class="post-subline">@priya.icchha · icchha · 1h ago</div>
+    </div>
+    <div class="post-badge ic">ic</div>
+  </div>
+  <div class="post-body">
+    i'm going to need the fandom to stop treating the Well of Revelation as a reliable narrator.<br><br>
+    it uses the word <em>chosen</em> without attribution. it refers to fennic in the third person in a chapter where fennic is the supposed speaker. it describes a timeline that is off by nine months from every other established date in the series. <strong>the Well is doing something. the Well is lying, or the Well is being used, or the Well doesn't know what it is — and those are three completely different problems.</strong><br><br>
+    and yet! every theory post i read takes the Well's testimony at face value and builds upward. elaborate structures on a foundation i have documented is cracked. i have a spreadsheet with twelve tabs. i've read the Well chapter nineteen times. i don't hate it — i find it genuinely fascinating — but i hate what the fandom is doing with it, which is trusting it, and i hate that i know too much about this to let it go.<br><br>
+    the Well is not a source. it is evidence.
+  </div>
+  <div class="post-tags">
+    <span class="tag">#shadowsofprimrose</span>
+    <span class="tag">#the well of revelation</span>
+    <span class="tag">#the well is not reliable</span>
+    <span class="tag">#twelve tabs</span>
+    <span class="tag">#it is evidence not testimony</span>
+  </div>
+  <div class="thread-chain">
+    <div class="thread-reply">
+      <div class="thread-avatar">🌿</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--purple-mid)">Wren Callowell</div>
+        <div class="thread-text">priya i have been building a well-based theory for six months and you have just made me question everything i love</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">🔬</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+        <div class="thread-text">good. your theory should be able to survive scrutiny. send it to me. i'll add it to the spreadsheet.</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">🌿</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--purple-mid)">Wren Callowell</div>
+        <div class="thread-text">i don't know if that's reassuring or threatening</div>
+      </div>
+    </div>
+    <div class="thread-reply">
+      <div class="thread-avatar">🔬</div>
+      <div class="thread-content">
+        <div class="thread-author" style="color:var(--green-f)">Priya Verma</div>
+        <div class="thread-text">it's neither. it's methodology.</div>
+      </div>
+    </div>
+  </div>
+  <div class="post-actions">
+    <button class="action-btn upvote">♡ 748</button>
+    <button class="action-btn reblog">⟳ 481</button>
+    <button class="action-btn reply-btn">↩ reply</button>
+  </div>
+</div>
+
+</main>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="sidebar-right">
+
+    <div class="lore-ticker">
+      <div class="ticker-label">// lore wire</div>
+      <span class="ticker-text">ELARA FINAL LINE DISCOURSE STILL ONGOING · MAREN ASHWICK CIVIL WAR DAY 47 · CONNECTION THEORY SPREADSHEET UPDATED · TADHG STATUS: PROBABLY FINE · THE HUM CANNOT BE EXPLAINED · CHROMATIC SYMBOL MASTERPOST GOING VIRAL · ISMELDA DISCOURSE INTENSIFYING · ELI RIGHTS · THE ROMANCE IS LOAD-BEARING · COLBYJACKCH33SE REPLIED WITH A PERIOD · CAL EMMERICH TRAVELED WITH PEOPLE · THE BOOK WAS WRITTEN TO BE FOUND · LYRA PRIMLEY DESERVES GRAPE HEALING GRAPE · THERE IS AN ERROR IN THE GARDEN HORROR ENTRY ·</span>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">// corvid cast online</div>
+      <div class="who-card"><div class="who-dot cyan"></div><div><div class="who-name">Nadim Al-Hakim</div><div class="who-faction">baqaya · reading</div></div></div>
+      <div class="who-card"><div class="who-dot magenta"></div><div><div class="who-name">Élodie Moreau</div><div class="who-faction">âcre · being right</div></div></div>
+      <div class="who-card"><div class="who-dot yellow"></div><div><div class="who-name">Mateo Reyes</div><div class="who-faction">dulzor · crying</div></div></div>
+      <div class="who-card"><div class="who-dot red"></div><div><div class="who-name">Amina Brooks</div><div class="who-faction">semper · rereading ch7</div></div></div>
+      <div class="who-card"><div class="who-dot blue"></div><div><div class="who-name">Thiago Carvalho</div><div class="who-faction">saudade · having feelings</div></div></div>
+      <div class="who-card"><div class="who-dot green"></div><div><div class="who-name">Priya Verma</div><div class="who-faction">icchha · spreadsheet</div></div></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">// trending tags</div>
+      <div style="display:flex;flex-direction:column;gap:5px;margin-top:4px">
+        <span class="tag" style="cursor:default">#it was a threat</span>
+        <span class="tag" style="cursor:default">#harbingers convergence</span>
+        <span class="tag" style="cursor:default">#tadhg walked into a wound</span>
+        <span class="tag" style="cursor:default">#the maren project</span>
+        <span class="tag" style="cursor:default">#she deserves to survive</span>
+        <span class="tag" style="cursor:default">#book3 speculation</span>
+        <span class="tag" style="cursor:default">#the romance is load-bearing</span>
+        <span class="tag" style="cursor:default">#chromatic symbol</span>
+        <span class="tag" style="cursor:default">#maybe this was who he was</span>
+        <span class="tag" style="cursor:default">#ismelda choosing to be slow</span>
+        <span class="tag" style="cursor:default">#written to be found</span>
+        <span class="tag" style="cursor:default">#colby replied with a period</span>
+        <span class="tag" style="cursor:default">#power didn't look like perfection</span>
+        <span class="tag" style="cursor:default">#the book is a trail</span>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+  // ── state ──────────────────────────────────────────────
+  let activeTab    = 'all';
+  let activeFandom = 'all';
+  let activeFaction = null;
+
+  // ── visibility logic ───────────────────────────────────
+  function applyFilters() {
+    const posts    = document.querySelectorAll('.post');
+    const dividers = document.querySelectorAll('.feed-divider');
+
+    posts.forEach(post => {
+      const type    = post.dataset.type;     // 'ic' | 'fandom'
+      const fandom  = post.dataset.fandom;   // 'harbingers' | 'shadowsofprimrose' | 'thehollow'
+      const faction = post.dataset.faction;  // 'baqaya' | 'acre' | etc, only on ic posts
+      const hasThread = post.dataset.hasThread === 'true';
+
+      let show = true;
+
+      // feed tab filter
+      if (activeTab === 'in-character' && type !== 'ic')      show = false;
+      if (activeTab === 'fandom'       && type !== 'fandom')  show = false;
+      if (activeTab === 'threads'      && !hasThread)         show = false;
+
+      // fandom tag filter
+      if (activeFandom !== 'all' && fandom !== activeFandom)  show = false;
+
+      // faction sidebar filter (only applies to ic posts)
+      if (activeFaction && faction !== activeFaction)         show = false;
+
+      post.style.display = show ? '' : 'none';
+    });
+
+    // hide dividers if all posts in their section are hidden
+    dividers.forEach(divider => {
+      let next = divider.nextElementSibling;
+      let hasVisible = false;
+      while (next && !next.classList.contains('feed-divider')) {
+        if (next.classList.contains('post') && next.style.display !== 'none') {
+          hasVisible = true;
+          break;
+        }
+        next = next.nextElementSibling;
+      }
+      divider.style.display = hasVisible ? '' : 'none';
+    });
+  }
+
+  // ── feed tabs ──────────────────────────────────────────
+  document.querySelectorAll('.feed-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      activeTab = tab.textContent.trim().toLowerCase();
+      // threads tab: clear fandom filter since threads can be any fandom
+      applyFilters();
+    });
+  });
+
+  // ── tag filters ────────────────────────────────────────
+  document.querySelectorAll('.tag-filter .tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      document.querySelectorAll('.tag-filter .tag').forEach(t => t.classList.remove('active'));
+      tag.classList.add('active');
+      const val = tag.textContent.replace('#','').trim().toLowerCase();
+      activeFandom = val === 'all' ? 'all' : val;
+      // clear faction filter when switching fandom
+      activeFaction = null;
+      document.querySelectorAll('.sidebar-link[data-faction]').forEach(l => l.classList.remove('active'));
+      applyFilters();
+    });
+  });
+
+  // ── faction sidebar links ──────────────────────────────
+  document.querySelectorAll('.sidebar-link[data-faction]').forEach(link => {
+    link.addEventListener('click', () => {
+      const f = link.dataset.faction;
+      if (activeFaction === f) {
+        // toggle off
+        activeFaction = null;
+        link.classList.remove('active');
+      } else {
+        document.querySelectorAll('.sidebar-link[data-faction]').forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        activeFaction = f;
+        // switch to ic tab when filtering by faction
+        activeTab = 'ic';
+        document.querySelectorAll('.feed-tab').forEach(t => {
+          t.classList.toggle('active', t.textContent.trim().toLowerCase() === 'in-character');
+        });
+      }
+      applyFilters();
+    });
+  });
+
+  // ── nav top buttons ────────────────────────────────────
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // ── like toggle ────────────────────────────────────────
+  document.querySelectorAll('.action-btn.upvote').forEach(btn => {
+    let liked = false;
+    const original = btn.textContent.trim();
+    const parts = original.split(' ');
+    const icon = parts[0];
+    const rawNum = parts[1] || '0';
+
+    // parse number that may end in k
+    function parseCount(s) {
+      if (s.endsWith('k')) return Math.round(parseFloat(s) * 1000);
+      return parseInt(s.replace(/,/g, '')) || 0;
+    }
+    function formatCount(n) {
+      if (n >= 1000) return (n / 1000).toFixed(1).replace('.0','') + 'k';
+      return String(n);
+    }
+
+    let count = parseCount(rawNum);
+
+    btn.addEventListener('click', () => {
+      liked = !liked;
+      count += liked ? 1 : -1;
+      btn.textContent = (liked ? '♥' : '♡') + ' ' + formatCount(count);
+      btn.style.color      = liked ? 'var(--neon-green)' : '';
+      btn.style.textShadow = liked ? 'var(--glow-green)' : '';
+    });
+  });
+
+  // ── reblog toggle ──────────────────────────────────────
+  document.querySelectorAll('.action-btn.reblog').forEach(btn => {
+    let relogged = false;
+    const original = btn.textContent.trim();
+    const parts = original.split(' ');
+    function parseCount(s) {
+      if (!s) return 0;
+      if (s.endsWith('k')) return Math.round(parseFloat(s) * 1000);
+      return parseInt(s.replace(/,/g, '')) || 0;
+    }
+    function formatCount(n) {
+      if (n >= 1000) return (n / 1000).toFixed(1).replace('.0','') + 'k';
+      return String(n);
+    }
+    let count = parseCount(parts[1]);
+
+    btn.addEventListener('click', () => {
+      relogged = !relogged;
+      count += relogged ? 1 : -1;
+      btn.textContent = '⟳ ' + formatCount(count);
+      btn.style.color      = relogged ? 'var(--neon-pink)' : '';
+      btn.style.textShadow = relogged ? 'var(--glow-pink)' : '';
+    });
+  });
+
+  // ── reply button — expand/collapse thread ──────────────
+  document.querySelectorAll('.action-btn.reply-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const post   = btn.closest('.post');
+      const chain  = post.querySelector('.thread-chain');
+      if (!chain) return;
+      const open = chain.style.display === 'none';
+      chain.style.display = open ? '' : 'none';
+      btn.style.color      = open ? 'var(--purple-mid)' : '';
+      btn.style.textShadow = open ? '0 0 8px #a855f788' : '';
+      btn.textContent      = open ? '↩ hide' : '↩ reply';
+    });
+  });
+
+  // ── shuffle feed on load ───────────────────────────────
+  (function shuffleFeed() {
+    const feed = document.querySelector('.feed');
+    // Grab everything except the tabs and tag filter (first two children)
+    const fixed = [];
+    const shuffleable = [];
+
+    Array.from(feed.children).forEach(el => {
+      if (el.classList.contains('feed-tabs') || el.classList.contains('tag-filter')) {
+        fixed.push({ el, fixed: true });
+      } else {
+        shuffleable.push(el);
+      }
+    });
+
+    // Fisher-Yates shuffle
+    for (let i = shuffleable.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffleable[i], shuffleable[j]] = [shuffleable[j], shuffleable[i]];
+    }
+
+    // Reinsert: fixed first, then shuffled
+    fixed.forEach(({ el }) => feed.insertBefore(el, feed.firstChild));
+    // appendChild moves nodes, so just append shuffled in new order
+    // (fixed are already at top from insertBefore above, but let's rebuild cleanly)
+    // Detach all, then reattach in order
+    const tabsEl   = feed.querySelector('.feed-tabs');
+    const filterEl = feed.querySelector('.tag-filter');
+    while (feed.firstChild) feed.removeChild(feed.firstChild);
+    feed.appendChild(tabsEl);
+    feed.appendChild(filterEl);
+    shuffleable.forEach(el => feed.appendChild(el));
+  })();
+
+  // initial render
+  applyFilters();
+</script>
+</body>
+</html>
