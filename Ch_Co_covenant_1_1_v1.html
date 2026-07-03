@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thiago Carvalho — Polyscript Session</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* Thiago colors — Saudade/Blue faction */
+      --primary:   #457B9D;
+      --accent:    #2A9D8F;
+      --highlight: #64B5F6;
+      --red-hair:  #FF6B35;
+      --bg:        #0D1620;
+      --screen-bg: #0A0E18;
+      --bevel-light: #5BA3C8;
+      --bevel-dark:  #1A2F45;
+      --bevel-mid:   #2E4A6F;
+      --text:      #C8E5F7;
+      --muted:     #6B8FA0;
+      --scanline: rgba(0,0,0,0.18);
+    }
+
+    html, body {
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      overflow-x: hidden;
+      padding: 1.5rem;
+    }
+
+    /* Ambient bg glow */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 50% 50%, rgba(69,123,157,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 20% 80%, rgba(42,157,143,0.05) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── MONITOR SHELL ── */
+    .monitor {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 720px;
+
+      /* Thick 90s bevel */
+      background: var(--bevel-mid);
+      border-radius: 18px 18px 22px 22px;
+      padding: 18px 20px 22px;
+
+      box-shadow:
+        /* outer glow */
+        0 0 40px rgba(69,123,157,0.5),
+        0 0 80px rgba(69,123,157,0.2),
+        /* bevel highlights */
+        inset 4px 4px 0 var(--bevel-light),
+        inset -4px -4px 0 var(--bevel-dark),
+        inset 8px 8px 0 rgba(100,181,246,0.15),
+        inset -8px -8px 0 rgba(26,47,69,0.4);
+    }
+
+    /* Top bar — brand strip */
+    .monitor-brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4px 10px;
+      border-bottom: 2px solid var(--bevel-dark);
+      margin-bottom: 12px;
+    }
+
+    .brand-name {
+      font-family: 'VT323', monospace;
+      font-size: 1.1rem;
+      color: var(--bevel-light);
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 8px var(--primary);
+    }
+
+    .brand-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--bevel-dark);
+    }
+    .dot:nth-child(1) { background: var(--red-hair); box-shadow: 0 0 4px var(--red-hair); }
+    .dot:nth-child(2) { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+    .dot:nth-child(3) { background: var(--highlight); box-shadow: 0 0 4px var(--highlight); }
+
+    /* ── CRT SCREEN ── */
+    .screen {
+      position: relative;
+      background: var(--screen-bg);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 420px;
+      display: flex;
+      flex-direction: column;
+
+      box-shadow:
+        inset 3px 3px 8px rgba(0,0,0,0.8),
+        inset -2px -2px 4px rgba(69,123,157,0.1),
+        0 0 0 3px var(--bevel-dark),
+        0 0 0 5px var(--bevel-mid);
+    }
+
+    /* Scanlines overlay */
+    .screen::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        var(--scanline) 0px,
+        var(--scanline) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      pointer-events: none;
+      z-index: 10;
+      border-radius: 8px;
+    }
+
+    /* Subtle CRT warp at edges */
+    .screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 100% 100% at 50% 50%,
+        transparent 60%,
+        rgba(0,0,0,0.35) 100%);
+      pointer-events: none;
+      z-index: 9;
+      border-radius: 8px;
+    }
+
+    /* ── LOCATION BAR ── */
+    .location-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid rgba(69,123,157,0.3);
+      background: rgba(69,123,157,0.06);
+      position: relative;
+      z-index: 2;
+    }
+
+    .location-tag {
+      font-family: 'VT323', monospace;
+      font-size: 1rem;
+      color: var(--primary);
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 10px var(--primary);
+    }
+
+    .location-divider { color: var(--muted); font-size: 0.8rem; }
+
+    .encounter-count {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    /* ── CHARACTER PORTRAIT STRIP ── */
+    .portrait-strip {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.2rem 0.75rem;
+      border-bottom: 1px solid rgba(69,123,157,0.15);
+      position: relative;
+      z-index: 2;
+    }
+
+    .portrait {
+      width: 52px;
+      height: 52px;
+      border-radius: 4px;
+      border: 2px solid var(--primary);
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'VT323', monospace;
+      font-size: 1.8rem;
+      color: var(--red-hair);
+      text-shadow: 0 0 12px var(--red-hair);
+      box-shadow: 0 0 12px rgba(69,123,157,0.4), inset 0 0 8px rgba(69,123,157,0.1);
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portrait::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(100,181,246,0.15) 0%, transparent 60%);
+    }
+
+    .portrait-info { flex: 1; }
+
+    .char-name {
+      font-family: 'VT323', monospace;
+      font-size: 1.5rem;
+      color: var(--highlight);
+      text-shadow: 0 0 12px var(--primary);
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+
+    .char-role {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+    }
+
+    .faction-pip {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+      box-shadow: 0 0 6px currentColor;
+    }
+
+    /* ── DIALOGUE AREA ── */
+    .dialogue-area {
+      flex: 1;
+      padding: 1.2rem 1.4rem;
+      position: relative;
+      z-index: 2;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    /* Atmosphere text (scene-setting, above the box) */
+    .atmosphere {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      font-style: italic;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      letter-spacing: 0.03em;
+    }
+
+    .atmosphere.visible { opacity: 1; }
+
+    /* The actual dialogue box */
+    .dialogue-box {
+      border: 1px solid var(--primary);
+      border-radius: 4px;
+      background: rgba(69,123,157,0.05);
+      padding: 1rem 1.2rem 1.2rem;
+      box-shadow:
+        0 0 16px rgba(69,123,157,0.15),
+        inset 0 0 20px rgba(69,123,157,0.04);
+      position: relative;
+    }
+
+    /* Corner brackets */
+    .dialogue-box::before,
+    .dialogue-box::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      border-color: var(--primary);
+      border-style: solid;
+      box-shadow: 0 0 6px var(--primary);
+    }
+    .dialogue-box::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .dialogue-box::after  { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+    .dialogue-text {
+      font-size: 1rem;
+      color: var(--text);
+      line-height: 1.75;
+      min-height: 3.5rem;
+      letter-spacing: 0.02em;
+    }
+
+    /* Typing cursor */
+    .cursor {
+      display: inline-block;
+      width: 9px; height: 1.1em;
+      background: var(--primary);
+      vertical-align: text-bottom;
+      margin-left: 2px;
+      animation: blink 0.85s step-end infinite;
+      box-shadow: 0 0 6px var(--primary);
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* ── CONTINUE PROMPT ── */
+    .continue-prompt {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
+    }
+
+    .continue-prompt.visible { opacity: 1; }
+
+    .continue-text {
+      font-family: 'VT323', monospace;
+      font-size: 1rem;
+      color: var(--accent);
+      letter-spacing: 0.2em;
+      text-shadow: 0 0 10px var(--accent);
+    }
+
+    .continue-arrow {
+      color: var(--accent);
+      font-size: 1rem;
+      text-shadow: 0 0 10px var(--accent);
+      animation: nudge 1.1s ease-in-out infinite;
+    }
+
+    @keyframes nudge {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px); }
+    }
+
+    /* ── BOTTOM BAR ── */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.65rem 1rem;
+      border-top: 1px solid rgba(69,123,157,0.2);
+      background: rgba(0,0,0,0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    .progress-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+
+    .progress-pips {
+      display: flex;
+      gap: 5px;
+    }
+
+    .pip {
+      width: 22px; height: 5px;
+      border-radius: 2px;
+      background: rgba(69,123,157,0.2);
+      border: 1px solid rgba(69,123,157,0.3);
+      transition: all 0.3s ease;
+    }
+
+    .pip.done {
+      background: var(--primary);
+      box-shadow: 0 0 6px var(--primary);
+      border-color: var(--primary);
+    }
+
+    .pip.active {
+      background: var(--highlight);
+      box-shadow: 0 0 8px var(--highlight);
+      border-color: var(--highlight);
+      animation: pipPulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pipPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .scene-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    /* Permission meter */
+    .permission-meter {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .permission-bar {
+      width: 80px;
+      height: 4px;
+      border: 1px solid rgba(69,123,157,0.3);
+      border-radius: 2px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .permission-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      width: 0%;
+      transition: width 0.3s ease;
+      box-shadow: 0 0 6px var(--primary);
+    }
+
+    /* ── MONITOR BOTTOM ── */
+    .monitor-base {
+      position: relative;
+      width: 65%;
+      height: 14px;
+      margin: 0 auto;
+      background: var(--bevel-mid);
+      box-shadow:
+        inset 2px 2px 0 var(--bevel-light),
+        inset -2px -2px 0 var(--bevel-dark),
+        0 6px 0 rgba(26,47,69,0.6),
+        0 0 20px rgba(69,123,157,0.3);
+      border-radius: 0 0 6px 6px;
+    }
+
+    /* ── SCENE END SCREEN ── */
+    .scene-end {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+      padding: 2.5rem 2rem;
+      position: absolute;
+      inset: 0;
+      background: var(--screen-bg);
+      z-index: 20;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    .scene-end.visible { display: flex; }
+
+    .end-title {
+      font-family: 'VT323', monospace;
+      font-size: 2.2rem;
+      color: var(--primary);
+      text-shadow: 0 0 20px var(--primary), 0 0 40px rgba(69,123,157,0.5);
+      letter-spacing: 0.1em;
+    }
+
+    .end-ending-type {
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+
+    .end-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      line-height: 1.8;
+    }
+
+    .affinity-readout {
+      border: 1px solid var(--primary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 3px;
+      background: rgba(69,123,157,0.06);
+      box-shadow: 0 0 12px rgba(69,123,157,0.2);
+    }
+
+    .affinity-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .affinity-key { color: var(--muted); letter-spacing: 0.1em; }
+    .affinity-val { color: var(--accent); text-shadow: 0 0 8px var(--accent); }
+
+    .restart-btn {
+      margin-top: 0.5rem;
+      padding: 0.6rem 2rem;
+      border: 2px solid var(--primary);
+      background: transparent;
+      color: var(--primary);
+      font-family: 'VT323', monospace;
+      font-size: 1.2rem;
+      letter-spacing: 0.2em;
+      cursor: pointer;
+      border-radius: 3px;
+      text-shadow: 0 0 8px var(--primary);
+      box-shadow: 0 0 12px rgba(69,123,157,0.2);
+      transition: all 0.2s ease;
+    }
+
+    .restart-btn:hover {
+      background: var(--primary);
+      color: var(--bg);
+      box-shadow: 0 0 24px rgba(69,123,157,0.5);
+      text-shadow: none;
+    }
+
+    .wordle-unlock {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 2px dashed var(--accent);
+      border-radius: 4px;
+      background: rgba(42,157,143,0.1);
+      font-size: 0.85rem;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      text-shadow: 0 0 10px var(--accent);
+    }
+
+    .wordle-link {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      font-family: 'VT323', monospace;
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      cursor: pointer;
+      border-radius: 2px;
+      text-shadow: 0 0 6px var(--accent);
+      box-shadow: 0 0 8px rgba(42,157,143,0.3);
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .wordle-link:hover {
+      background: var(--accent);
+      color: var(--bg);
+      box-shadow: 0 0 16px rgba(42,157,143,0.6);
+      text-shadow: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      .monitor { padding: 12px 12px 16px; }
+      .dialogue-text { font-size: 0.9rem; }
+      .char-name { font-size: 1.3rem; }
+      .portrait { width: 42px; height: 42px; font-size: 1.5rem; }
+      .permission-meter { flex-direction: column; gap: 0.3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="monitor">
+  <div class="monitor-brand">
+    <span class="brand-name">CHROMATIC COVENANT // DIALOGUE ENGINE v0.2</span>
+    <div class="brand-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen">
+
+    <!-- LOCATION BAR -->
+    <div class="location-bar">
+      <span class="location-tag">ORBITAL STATION · STUDY LOUNGE</span>
+      <span class="location-divider">›</span>
+      <span class="location-tag" style="color: var(--accent); text-shadow: 0 0 10px var(--accent);">ARC 1 · CASE MANAGEMENT SESSION</span>
+      <span class="encounter-count" id="encounter-count">1 / 6</span>
+    </div>
+
+    <!-- CHARACTER STRIP -->
+    <div class="portrait-strip">
+      <div class="portrait" id="char-portrait">T</div>
+      <div class="portrait-info">
+        <div class="char-name">THIAGO</div>
+        <div class="char-role">
+          <span class="faction-pip" id="faction-pip" style="background: #457B9D; color: #457B9D;"></span>
+          <span>SAUDADE · BLUE FACTION</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIALOGUE -->
+    <div class="dialogue-area">
+      <div class="atmosphere" id="atmosphere-text"></div>
+
+      <div class="dialogue-box" id="dialogue-box">
+        <div class="dialogue-text" id="dialogue-text">
+          <span id="typed-output"></span><span class="cursor" id="cursor"></span>
+        </div>
+        <div class="continue-prompt" id="continue-prompt" onclick="advanceScene()">
+          <span class="continue-text">CONTINUE</span>
+          <span class="continue-arrow">▶▶</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR WITH PERMISSION METER -->
+    <div class="bottom-bar">
+      <span class="progress-label">EXCHANGE</span>
+      <div class="progress-pips" id="progress-pips"></div>
+      <div class="permission-meter">
+        <span>PERMISSION</span>
+        <div class="permission-bar">
+          <div class="permission-fill" id="permission-fill"></div>
+        </div>
+        <span id="permission-val">0/10</span>
+      </div>
+    </div>
+
+    <!-- SCENE END OVERLAY -->
+    <div class="scene-end" id="scene-end">
+      <div class="end-title">SESSION COMPLETE</div>
+      <div class="end-ending-type" id="end-type">NEUTRAL ENDING</div>
+      <div class="end-sub">Archive Reference #4017-CV<br>Thiago Carvalho · Polyscript Study · Arc 1</div>
+      <div class="affinity-readout">
+        <div class="affinity-row">
+          <span class="affinity-key">PERMISSION SCORE</span>
+          <span class="affinity-val" id="aff-permission">0</span>
+        </div>
+        <div class="affinity-row">
+          <span class="affinity-key">FINAL PERMISSION LEVEL</span>
+          <span class="affinity-val" id="aff-final">0 / 10</span>
+        </div>
+        <div class="affinity-row">
+          <span class="affinity-key">ENDING TYPE</span>
+          <span class="affinity-val" id="aff-ending">NEUTRAL</span>
+        </div>
+      </div>
+      <div id="wordle-section"></div>
+      <button class="restart-btn" onclick="restartScene()">▶ RESTART ENCOUNTER</button>
+    </div>
+
+  </div><!-- /screen -->
+</div><!-- /monitor -->
+
+<div class="monitor-base"></div>
+
+<script>
+  // ── THIAGO SCENE DATA ────────────────────────────────────────────────────────
+  // Permission-based dialogue tree with branching paths
+  // Permission tracking: 0-10, with different endings based on final score
+  
+  const scene = {
+    character: {
+      name: "THIAGO",
+      role: "SAUDADE · BLUE FACTION",
+      initial: "T",
+      color: "#457B9D",
+      location: "ORBITAL STATION · STUDY LOUNGE",
+      encounter: "ARC 1 · CASE MANAGEMENT SESSION",
+    },
+    // Beat 1: Thiago at the table, already helping others
+    beat1: {
+      atmosphere: "He's organized color-coded notes for two people he barely knows. The Shift column is open in front of him. He looks up when you sit.",
+      text: "Hey — grab whatever space you need. I'm working through the Shift column but I'm going slowly. Helping a couple people earlier set me back — worth it, but.",
+      options: [
+        { text: "You don't have to help me too. I'll figure it out.", permission: 2, next: "beat2a" },
+        { text: "Same column. We could go through it together if you want.", permission: 1, next: "beat2b" },
+        { text: "The Shift column is brutal. I'm dreading it.", permission: 1, next: "beat2c" },
+        { text: "You've been helping people all session? That's really kind of you.", permission: 0, next: "beat2d" },
+        { text: "Oh good — I was hoping someone here knew this stuff. Can you walk me through it?", permission: -1, next: "beat2e" }
+      ]
+    },
+    // Beat 2A: Taking yourself off his plate
+    beat2a: {
+      atmosphere: "Something in his shoulders drops slightly. Like he exhaled something.",
+      text: "Thanks. I mean — I don't mind. But thanks. Actually — can I ask you something? Not about Polyscript. You don't have to answer.",
+      options: [
+        { text: "Yeah. Go ahead.", permission: 2, next: "beat3a" },
+        { text: "Depends on the question.", permission: 2, next: "beat3a" },
+        { text: "Sure — but let me try this practice word first.", permission: 1, next: "beat3b" },
+        { text: "Of course! What's up?", permission: 0, next: "beat3c" }
+      ]
+    },
+    // Beat 2B: Offering collaboration
+    beat2b: {
+      atmosphere: "He recalibrates toward you—not as someone to help, but as someone to work with.",
+      text: "Yeah — actually that sounds good. I learn better out loud but I feel bad making it other people's problem.",
+      options: [
+        { text: "It's not other people's problem if they offer.", permission: 2, next: "beat3a" },
+        { text: "Same. Let's just try one out loud and see what happens.", permission: 1, next: "beat3b" },
+        { text: "You shouldn't feel bad about that.", permission: -1, next: "beat3c" }
+      ]
+    },
+    // Beat 2C: Honest path
+    beat2c: {
+      atmosphere: "He laughs — a real one. Slides his notebook over so you can both see.",
+      text: "Right? I keep reading the same section. Like if I read it enough times it'll click. It has not clicked.",
+      options: [
+        { text: "What part specifically isn't clicking?", permission: 2, next: "beat3a" },
+        { text: "Same. I think I need an example before the theory makes sense.", permission: 1, next: "beat3b" },
+        { text: "You probably understand it more than you think.", permission: -1, next: "beat3c" }
+      ]
+    },
+    // Beat 2D: Naming the performance
+    beat2d: {
+      atmosphere: "He smiles — the right smile. The one he uses when he's fine.",
+      text: "I don't mind. It's what I'm here for, right? He believes this. That's the problem.",
+      options: [
+        { text: "Is it though? Or is that just what you tell yourself?", permission: 2, next: "beat3a" },
+        { text: "What are you working on?", permission: 1, next: "beat3b" },
+        { text: "Well I appreciate it.", permission: 0, next: "beat3c" }
+      ]
+    },
+    // Beat 2E: Adding weight immediately
+    beat2e: {
+      atmosphere: "He opens his notebook and starts explaining. He's good at it. He's been doing it all session.",
+      text: "Sure. So the Shift column tells you the direction of the meaning — but direction isn't the same as destination. You can shift toward something and not arrive.",
+      options: [
+        { text: "Wait — before you start. Have you eaten today?", permission: 2, next: "beat3a" },
+        { text: "Actually — you know what, let me try it myself first. Give me five minutes.", permission: 2, next: "beat3b" },
+        { text: "[Listen. Take notes. Let him continue.]", permission: -1, next: "beat3d" }
+      ]
+    },
+    // Beat 3A: High permission path - he gets quiet
+    beat3a: {
+      atmosphere: "Thiago goes quiet. Not composing an answer. The quiet of someone who wasn't expecting the question.",
+      text: "...I don't know. I think I do it because if I'm focused on everyone else I don't have to feel whatever's going on with me. That's probably relevant to the case management program. In a concerning way.",
+      options: [
+        { text: "It's relevant. It's also really common in this field.", permission: 2, next: "beat4a" },
+        { text: "What IS going on with you?", permission: 2, next: "beat4a" },
+        { text: "You don't have to be concerned about it.", permission: -1, next: "beat4c" },
+        { text: "Is that something you want to figure out, or just something you know?", permission: 2, next: "beat4a" }
+      ]
+    },
+    // Beat 3B: Mid permission path
+    beat3b: {
+      atmosphere: "He turns the notebook so you can both see it. Goes through it methodically, warmly.",
+      text: "I think the part I like most about case management is documenting where someone is moving toward. Even if they haven't gotten there yet. That's still a valid encoding.",
+      options: [
+        { text: "Is that how you think about yourself?", permission: 2, next: "beat4a" },
+        { text: "That's a good distinction. Movement without arrival.", permission: 1, next: "beat4b" },
+        { text: "So on the encoding — the Shift marks intent, not outcome?", permission: 1, next: "beat4b" },
+        { text: "You're really good at explaining this.", permission: 0, next: "beat4c" }
+      ]
+    },
+    // Beat 3C: Reassurance path - he files it and keeps going
+    beat3c: {
+      atmosphere: "He smiles. Nods. Goes back to his notes. You can tell he absorbed your words and filed them away.",
+      text: "So — Shift column. Where are you stuck? Or — what are YOU stuck on, actually.",
+      options: [
+        { text: "Actually — what are YOU stuck on?", permission: 2, next: "beat4a" },
+        { text: "I'll try it myself first. But thank you.", permission: 1, next: "beat4b" },
+        { text: "The relational vs directional thing. I don't get it.", permission: 0, next: "beat4c" }
+      ]
+    },
+    // Beat 3D: Receiving path - cold track
+    beat3d: {
+      atmosphere: "He explains the whole Shift column. Clearly. Warmly. You understand it now. He understood it before he started explaining. Nothing moved for him.",
+      text: "That's the Mode column coming next—it's the one that needs more time to really click. But you've got this.",
+      options: [
+        { text: "Thank you. Can I ask — are you okay? You seem tired.", permission: 1, next: "beat4b" },
+        { text: "This was really helpful. Thank you.", permission: 0, next: "beat4c" },
+        { text: "Can you do the Mode column next?", permission: -1, next: "beat4d" }
+      ]
+    },
+    // Beat 4A: Deep connection - Wordle unlock territory
+    beat4a: {
+      atmosphere: "He's quiet for a long moment. His voice is different when he speaks—slower, more interior.",
+      text: "I think I'm moving toward knowing when to stop. Taking on other people's things. I made notes for two people who didn't ask. I spent four hours on something that wasn't my assignment. I don't know if that's kindness or something else.",
+      options: [
+        { text: "What would it feel like if it was something else?", permission: 2, next: "beat5warm" },
+        { text: "It can be both. That doesn't make the cost less real.", permission: 2, next: "beat5warm" },
+        { text: "I think it matters that you're asking the question.", permission: 1, next: "beat5warm" },
+        { text: "It's kindness. Don't be hard on yourself.", permission: -1, next: "beat5neutral" }
+      ]
+    },
+    // Beat 4B: Mid permission path
+    beat4b: {
+      atmosphere: "He considers carefully.",
+      text: "This one — the Shift is toward connection. But the Mode closes. It didn't arrive. That feels true for a lot of things.",
+      options: [
+        { text: "Is that true for you right now?", permission: 2, next: "beat5warm" },
+        { text: "A closed Mode doesn't mean it failed. Just that it ended.", permission: 1, next: "beat5warm" },
+        { text: "I see what you mean. Intention vs. outcome in the same word.", permission: 1, next: "beat5neutral" }
+      ]
+    },
+    // Beat 4C: Low permission path
+    beat4c: {
+      atmosphere: "He finishes his notes. Gathers the two sets he made for other people.",
+      text: "I think I'm going to take a break.",
+      options: [
+        { text: "Before you go — what do YOU need to get out of today?", permission: 2, next: "beat5neutral" },
+        { text: "Good idea. You've been here a long time.", permission: 1, next: "beat5neutral" },
+        { text: "Wait — can you check my Mode answers before you go?", permission: -1, next: "beat5cold" }
+      ]
+    },
+    // Beat 4D: Full weight path - cold
+    beat4d: {
+      atmosphere: "He explains the Mode column. All of it. Carefully. You finish your assignment. He hasn't started his.",
+      text: "That covers most of the Mode territory. Let me know if you have questions as you work through it.",
+      options: [
+        { text: "[Notice. Close your notebook.] When do you do your work?", permission: 1, next: "beat5neutral" },
+        { text: "Thank you. This was so helpful.", permission: 0, next: "beat5cold" },
+        { text: "[Submit your work. Pack up.]", permission: -1, next: "beat5cold" }
+      ]
+    },
+    // Beat 5 endings
+    beat5warm: {
+      atmosphere: "Thiago opens his bag. Takes out his phone. He's quiet for a moment — deciding something. Then he slides it across.",
+      text: "There's a practice tool. Polyscript encoding. I've been doing it every morning. Not to practice for the assignment. Just — for me. I want to see how you do it. Not to help. Just — I want to see someone else's approach.",
+      ending: "WARM",
+      permission: 7,
+      wordle: true
+    },
+    beat5neutral: {
+      atmosphere: "He packs his things. The other people's notes go in his bag — he'll find them.",
+      text: "You've got the Shift down. The Mode will come. Hey — thanks for today. You gave me something without knowing it.",
+      ending: "NEUTRAL",
+      permission: 4,
+      wordle: false
+    },
+    beat5cold: {
+      atmosphere: "He packs up. Smiles at you — real, warm, not a performance.",
+      text: "Good session. He carries you out of the room with him. Just your weight added to the rest.",
+      ending: "COLD",
+      permission: 0,
+      wordle: false
+    }
+  };
+
+  // ── STATE ────────────────────────────────────────────────────────────────────
+  let currentBeat = "beat1";
+  let isTyping = false;
+  let typeInterval = null;
+  let permission = 0;
+
+  // ── INIT ─────────────────────────────────────────────────────────────────────
+  function init() {
+    const c = scene.character;
+    document.getElementById('char-portrait').textContent = c.initial;
+    document.getElementById('encounter-count').textContent = "1 / 6";
+    playBeat("beat1");
+    document.getElementById('screen').addEventListener('click', handleScreenClick);
+  }
+
+  function handleScreenClick(e) {
+    if (e.target.closest('#continue-prompt')) return;
+    if (isTyping) {
+      skipTyping();
+    } else {
+      advanceScene();
+    }
+  }
+
+  // ── BEAT PLAYBACK ─────────────────────────────────────────────────────────────
+  function playBeat(beatKey) {
+    const beat = scene[beatKey];
+    if (!beat) return;
+
+    currentBeat = beatKey;
+    document.getElementById('continue-prompt').classList.remove('visible');
+
+    // Check if this is an ending beat — show dialogue first, end on click
+    if (beat.ending) {
+      const atmoEl = document.getElementById('atmosphere-text');
+      atmoEl.classList.remove('visible');
+      if (beat.atmosphere) {
+        atmoEl.textContent = beat.atmosphere;
+        setTimeout(() => atmoEl.classList.add('visible'), 100);
+      }
+      updatePips();
+      updateEncounterCount();
+      typeText(beat.text, () => {
+        const prompt = document.getElementById('continue-prompt');
+        prompt.innerHTML = `<span class="continue-text">SESSION COMPLETE</span><span class="continue-arrow">▶▶</span>`;
+        prompt.classList.add('visible');
+        prompt.onclick = () => endScene(beat.ending, beat.permission, beat.wordle);
+      });
+      return;
+    }
+
+    // Atmosphere
+    const atmoEl = document.getElementById('atmosphere-text');
+    atmoEl.classList.remove('visible');
+    if (beat.atmosphere) {
+      atmoEl.textContent = beat.atmosphere;
+      setTimeout(() => atmoEl.classList.add('visible'), 100);
+    }
+
+    updatePips();
+    updateEncounterCount();
+
+    // Typewrite
+    typeText(beat.text, () => {
+      setTimeout(() => {
+        renderOptions(beat.options);
+        document.getElementById('continue-prompt').classList.add('visible');
+      }, 200);
+    });
+  }
+
+  // ── OPTIONS RENDERING ────────────────────────────────────────────────────────
+  function renderOptions(options) {
+    const container = document.getElementById('continue-prompt');
+    container.innerHTML = '';
+
+    // Create a small option display
+    const optionsHTML = options.map((opt, i) => `
+      <button onclick="selectOption(${i})" style="
+        display: block;
+        width: 100%;
+        margin-bottom: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        border: 1px solid var(--accent);
+        background: transparent;
+        color: var(--accent);
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.8rem;
+        cursor: pointer;
+        border-radius: 2px;
+        letter-spacing: 0.05em;
+        text-shadow: 0 0 8px var(--accent);
+        transition: all 0.2s ease;
+        text-align: left;
+      " onmouseover="this.style.background='rgba(42,157,143,0.2)'" onmouseout="this.style.background='transparent'">
+        [${String.fromCharCode(65 + i)}] ${opt.text}
+      </button>
+    `).join('');
+
+    container.innerHTML = optionsHTML;
+  }
+
+  function selectOption(index) {
+    const beat = scene[currentBeat];
+    const option = beat.options[index];
+
+    // Update permission
+    permission += option.permission;
+    if (permission < 0) permission = 0;
+    if (permission > 10) permission = 10;
+
+    updatePermissionMeter();
+
+    // Play next beat
+    playBeat(option.next);
+  }
+
+  // ── PIPS & PROGRESS ──────────────────────────────────────────────────────────
+  function updatePips() {
+    const beatNum = { beat1: 1, beat2a: 2, beat2b: 2, beat2c: 2, beat2d: 2, beat2e: 2, beat3a: 3, beat3b: 3, beat3c: 3, beat3d: 3, beat4a: 4, beat4b: 4, beat4c: 4, beat4d: 4, beat5warm: 5, beat5neutral: 5, beat5cold: 5 };
+    const current = beatNum[currentBeat] || 1;
+    const container = document.getElementById('progress-pips');
+    container.innerHTML = '';
+    for (let i = 0; i < 6; i++) {
+      const pip = document.createElement('div');
+      pip.className = 'pip';
+      if (i + 1 < current) pip.classList.add('done');
+      else if (i + 1 === current) pip.classList.add('active');
+      container.appendChild(pip);
+    }
+  }
+
+  function updateEncounterCount() {
+    const beatNum = { beat1: 1, beat2a: 2, beat2b: 2, beat2c: 2, beat2d: 2, beat2e: 2, beat3a: 3, beat3b: 3, beat3c: 3, beat3d: 3, beat4a: 4, beat4b: 4, beat4c: 4, beat4d: 4, beat5warm: 5, beat5neutral: 5, beat5cold: 5 };
+    const num = beatNum[currentBeat] || 1;
+    document.getElementById('encounter-count').textContent = `${num} / 6`;
+  }
+
+  function updatePermissionMeter() {
+    const pct = (permission / 10) * 100;
+    document.getElementById('permission-fill').style.width = pct + '%';
+    document.getElementById('permission-val').textContent = `${permission}/10`;
+  }
+
+  // ── TYPEWRITER ────────────────────────────────────────────────────────────────
+  function typeText(text, onComplete) {
+    const output = document.getElementById('typed-output');
+    const cursor = document.getElementById('cursor');
+
+    output.textContent = '';
+    cursor.style.display = 'inline-block';
+    isTyping = true;
+
+    let i = 0;
+    const speed = 28;
+
+    typeInterval = setInterval(() => {
+      if (i < text.length) {
+        output.textContent += text[i];
+        i++;
+      } else {
+        clearInterval(typeInterval);
+        isTyping = false;
+        if (onComplete) onComplete();
+      }
+    }, speed);
+  }
+
+  function skipTyping() {
+    if (!isTyping) return;
+    clearInterval(typeInterval);
+    isTyping = false;
+
+    const beat = scene[currentBeat];
+    if (beat && beat.text) {
+      document.getElementById('typed-output').textContent = beat.text;
+    }
+  }
+
+  // ── ADVANCE ──────────────────────────────────────────────────────────────────
+  function advanceScene() {
+    if (isTyping) {
+      skipTyping();
+    }
+  }
+
+  // ── END SCENE ────────────────────────────────────────────────────────────────
+  function endScene(endingType, minPermission, hasWordle) {
+    const actualEnding = permission >= 7 ? "WARM" : permission >= 4 ? "NEUTRAL" : "COLD";
+    localStorage.setItem('cc_thiago_ending', actualEnding);
+
+    const endColors = {
+      WARM:    { primary: '#E8A04A', accent: '#F0C87A', glow: 'rgba(232,160,74,0.4)' },
+      NEUTRAL: { primary: '#457B9D', accent: '#2A9D8F', glow: 'rgba(69,123,157,0.4)' },
+      COLD:    { primary: '#5A7A8A', accent: '#3A5A6A', glow: 'rgba(58,90,106,0.3)' }
+    };
+    const c = endColors[actualEnding];
+    const endEl = document.getElementById('scene-end');
+    endEl.style.background = `radial-gradient(ellipse 80% 60% at 50% 40%, ${c.glow} 0%, var(--screen-bg) 70%)`;
+    document.getElementById('end-type').style.color = c.accent;
+    document.getElementById('end-type').style.textShadow = `0 0 16px ${c.accent}`;
+
+    document.getElementById('scene-end').classList.add('visible');
+    document.getElementById('end-type').textContent = actualEnding + " ENDING";
+    document.getElementById('aff-permission').textContent = permission;
+    document.getElementById('aff-final').textContent = `${permission} / 10`;
+    document.getElementById('aff-ending').textContent = actualEnding;
+
+    // Wordle unlock for warm ending
+    if (actualEnding === "WARM") {
+      const wordleSection = document.getElementById('wordle-section');
+      wordleSection.innerHTML = `
+        <div class="wordle-unlock">
+          ■ THIAGO'S PRACTICE TOOL UNLOCKED
+          <br><br>
+          You gave him permission to want something for himself.
+          <br>
+          <a href="#" class="wordle-link" onclick="alert('Wordle game would launch here'); return false;">▶ LAUNCH ENCODING PRACTICE</a>
+        </div>
+      `;
+    } else {
+      document.getElementById('wordle-section').innerHTML = '';
+    }
+  }
+
+  function restartScene() {
+    permission = 0;
+    isTyping = false;
+    clearInterval(typeInterval);
+
+    document.getElementById('scene-end').classList.remove('visible');
+    document.getElementById('scene-end').style.background = '';
+    document.getElementById('end-type').style.color = '';
+    document.getElementById('end-type').style.textShadow = '';
+    document.getElementById('typed-output').textContent = '';
+    document.getElementById('atmosphere-text').classList.remove('visible');
+    document.getElementById('continue-prompt').classList.remove('visible');
+
+    updatePermissionMeter();
+    updatePips();
+    playBeat('beat1');
+  }
+
+  // ── START ─────────────────────────────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>
