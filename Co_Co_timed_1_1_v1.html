@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COPIE // ORAL EXAM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  background: #080810;
+  color: #e8e4f0;
+  font-family: 'Share Tech Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+:root {
+  --amber: #ffb300;
+  --amber-light: #ffe97a;
+  --amber-dark: #c04a00;
+  --bg: #080810;
+  --bg2: #0f0f1a;
+  --bg3: #14112b;
+  --border: #2d1f4e;
+  --text: #e8e4f0;
+  --muted: #6b5f8a;
+  --green: #4caf50;
+  --green-bg: #0f2e0f;
+  --green-border: #2d5a2d;
+  --green-text: #c8f0c8;
+  --purple: #7C3AED;
+  --cyan: #0891B2;
+  --magenta: #c0006e;
+  --mono: 'Share Tech Mono', monospace;
+  --display: 'Bebas Neue', sans-serif;
+}
+
+/* ─── BOOT OVERLAY ─── */
+#boot-overlay {
+  position: fixed; inset: 0;
+  background: #080600;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 2000;
+  transition: opacity 0.9s ease;
+}
+#boot-overlay.gone { opacity: 0; pointer-events: none; }
+#boot-particle-canvas { position: absolute; inset: 0; z-index: 1; }
+#copie-boot-stage {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20px;
+  padding: 0 24px; width: 100%; max-width: 480px;
+}
+#boot-copie-svg {
+  filter: drop-shadow(0 0 24px rgba(255,179,0,0.7)) drop-shadow(0 0 60px rgba(255,179,0,0.3)) drop-shadow(0 0 4px rgba(255,179,0,1));
+  animation: copieFloat 3.2s ease-in-out infinite;
+  overflow: visible;
+  width: clamp(160px, 45vw, 260px);
+  height: clamp(160px, 45vw, 260px);
+}
+@keyframes copieFloat { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-12px)} }
+#boot-copie-svg.glitch { animation: copieGlitch 0.15s steps(1) infinite; }
+@keyframes copieGlitch {
+  0%   { filter: drop-shadow(0 0 24px rgba(255,179,0,0.7)) drop-shadow(-3px 0 0 rgba(192,0,110,0.9)); transform: translateX(-2px); }
+  33%  { filter: drop-shadow(0 0 24px rgba(255,179,0,0.7)) drop-shadow(3px 0 0 rgba(0,200,255,0.7)); transform: translateX(2px); }
+  66%  { filter: drop-shadow(0 0 24px rgba(255,179,0,0.7)); transform: scaleX(1.04); }
+  100% { filter: drop-shadow(0 0 24px rgba(255,179,0,0.7)) drop-shadow(-3px 0 0 rgba(192,0,110,0.9)); transform: translateX(-1px); }
+}
+#boot-sig {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(0.55rem, 2vw, 0.7rem);
+  color: #6e6050; letter-spacing: 5px;
+  text-transform: uppercase; text-align: center;
+  opacity: 0; transition: opacity 0.8s; margin-top: -6px;
+}
+#boot-sig.show { opacity: 1; }
+#boot-text {
+  font-size: clamp(0.75rem, 3.5vw, 0.95rem);
+  color: var(--amber); letter-spacing: 2px;
+  text-transform: uppercase; text-align: center;
+  text-shadow: 0 0 10px rgba(255,179,0,0.5);
+  min-height: 1.4em; width: 100%; padding: 0 8px;
+  opacity: 0; transition: opacity 0.3s;
+}
+#boot-text.show { opacity: 1; }
+
+/* ─── HOST INTRO OVERLAY ─── */
+#host-overlay {
+  position: fixed; inset: 0;
+  background: rgba(8,6,16,0.96);
+  z-index: 1500;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#host-overlay.show { display: flex; }
+.host-stage {
+  width: 100%; max-width: 640px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0;
+  margin: auto 0;
+  padding-bottom: 24px;
+}
+.host-broadcast-tag {
+  font-family: var(--display);
+  font-size: 11px; letter-spacing: 6px;
+  color: var(--magenta);
+  background: rgba(192,0,110,0.1);
+  border: 1px solid rgba(192,0,110,0.3);
+  border-radius: 20px; padding: 4px 16px;
+  margin-bottom: 18px;
+  animation: pulseTag 1.6s ease-in-out infinite;
+}
+@keyframes pulseTag { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.host-orb-wrap {
+  position: relative;
+  margin-bottom: 20px;
+}
+.host-orb {
+  width: 80px; height: 80px;
+  filter: drop-shadow(0 0 20px rgba(255,179,0,0.8));
+  animation: copieFloat 3.2s ease-in-out infinite;
+}
+.host-bubble {
+  width: 100%;
+  background: #0f0f1a;
+  border: 1px solid rgba(255,179,0,0.25);
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  position: relative;
+}
+.host-bubble::before {
+  content: '';
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-bottom-color: rgba(255,179,0,0.25);
+}
+.host-who {
+  font-size: 10px; letter-spacing: 3px; color: var(--amber);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+#host-speech-text {
+  font-size: 14px; line-height: 1.8; color: var(--text);
+  min-height: 3em;
+}
+.host-rules {
+  width: 100%;
+  background: #14112b;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: none;
+}
+.host-rules.show { display: block; }
+.rules-label {
+  font-size: 10px; letter-spacing: 3px; color: var(--purple);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.rules-list {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.rule-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 12px; color: #c0b8d8; line-height: 1.5;
+  opacity: 0; transform: translateX(-8px);
+  transition: all 0.3s ease;
+}
+.rule-item.show { opacity: 1; transform: translateX(0); }
+.rule-num {
+  color: var(--amber); font-size: 11px; flex-shrink: 0;
+  padding-top: 1px;
+}
+#host-start-btn {
+  display: none;
+  background: var(--amber); color: #0a0008;
+  border: none; border-radius: 10px;
+  padding: 14px 40px;
+  font-family: var(--display); font-size: 22px; letter-spacing: 3px;
+  cursor: pointer; width: 100%;
+  transition: all 0.15s;
+}
+#host-start-btn.show { display: block; }
+#host-start-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+#host-start-btn:active { transform: translateY(0); }
+
+/* ─── MAIN APP ─── */
+#app {
+  position: relative; z-index: 10;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  opacity: 0; transition: opacity 0.6s ease;
+}
+#app.show { opacity: 1; }
+
+/* bg */
+#bg-canvas {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0;
+}
+.scanlines {
+  position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+}
+.vignette {
+  position: fixed; inset: 0; z-index: 2; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.7) 100%);
+}
+
+/* top bar */
+.top-bar {
+  width: 100%; max-width: 700px;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px 10px;
+  border-bottom: 1px solid var(--border);
+  position: relative; z-index: 10;
+}
+.top-bar-left { display: flex; align-items: center; gap: 10px; }
+.top-copie-orb { width: 38px; height: 38px; filter: drop-shadow(0 0 8px rgba(255,179,0,0.6)); animation: copieFloat 3.2s ease-in-out infinite; }
+.bar-title { font-family: var(--display); font-size: 20px; letter-spacing: 2px; color: var(--amber); line-height: 1; }
+.bar-sub { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+.live-pill {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,179,0,0.08); border: 1px solid rgba(255,179,0,0.2);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 10px; letter-spacing: 2px; color: var(--amber);
+  position: relative; z-index: 10;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--amber);
+  animation: bpulse 1.4s ease-in-out infinite;
+}
+@keyframes bpulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+/* progress */
+.progress-wrap { width: 100%; max-width: 700px; padding: 10px 20px 0; position: relative; z-index: 10; }
+.progress-label { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; }
+.progress-track { height: 4px; background: var(--bg3); border-radius: 100%; }
+.progress-fill { height: 100%; border-radius: 100%; background: linear-gradient(90deg, var(--purple), var(--amber)); transition: width 0.4s ease; }
+
+/* score bar */
+.score-bar { width: 100%; max-width: 700px; padding: 8px 20px; display: flex; gap: 16px; justify-content: flex-end; position: relative; z-index: 10; }
+.score-chip { font-size: 11px; letter-spacing: 1px; padding: 3px 10px; border-radius: 10px; }
+.score-got { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green-text); }
+.score-miss { background: #2e0f0f; border: 1px solid #5a2d2d; color: #f0c8c8; }
+
+/* main */
+.main-area { width: 100%; max-width: 700px; padding: 16px 20px 80px; flex: 1; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 10; }
+
+/* copie speech */
+.copie-speech { display: flex; gap: 14px; align-items: flex-start; animation: fadeSlideIn 0.4s ease; }
+.speech-orb-wrap { flex-shrink: 0; width: 60px; }
+.speech-orb { width: 60px; height: 60px; }
+.speech-bubble {
+  flex: 1; background: var(--bg3);
+  border: 1px solid rgba(255,179,0,0.25);
+  border-radius: 0 16px 16px 16px; padding: 14px 18px; position: relative;
+}
+.speech-bubble::before {
+  content: ''; position: absolute; left: -8px; top: 14px;
+  border: 8px solid transparent; border-right-color: rgba(255,179,0,0.25);
+}
+.speech-label { font-size: 10px; letter-spacing: 3px; color: var(--amber); text-transform: uppercase; margin-bottom: 6px; }
+.speech-text { font-size: 14px; line-height: 1.7; color: var(--text); }
+.cur {
+  display: inline-block; width: 2px; height: 1em;
+  background: var(--amber); margin-left: 2px;
+  animation: blinkC 0.7s step-end infinite; vertical-align: text-bottom;
+}
+@keyframes blinkC { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* chapter tag */
+.chapter-tag { font-size: 10px; letter-spacing: 2px; color: var(--muted); padding: 4px 12px; border: 1px solid var(--border); border-radius: 20px; display: inline-block; animation: fadeIn 0.3s ease; }
+
+/* answer section */
+.answer-section { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; animation: fadeSlideIn 0.3s ease; }
+.answer-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.answer-prompt { font-size: 13px; color: #9b85cc; line-height: 1.5; margin-bottom: 14px; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-family: var(--mono); letter-spacing: 1px; border-radius: 10px; border: none; transition: all 0.15s ease; font-size: 13px; font-weight: 600; }
+.btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+.btn-reveal { background: var(--purple); color: #fff; padding: 13px 24px; width: 100%; }
+.btn-got { background: var(--green-bg); color: var(--green-text); border: 1px solid var(--green-border); padding: 11px 20px; flex: 1; }
+.btn-miss { background: #2e0f0f; color: #f0c8c8; border: 1px solid #5a2d2d; padding: 11px 20px; flex: 1; }
+.btn-next { background: var(--amber); color: #0a0008; padding: 11px 24px; flex: 2; font-family: var(--display); font-size: 16px; letter-spacing: 2px; }
+.btn-shuffle { background: none; color: var(--muted); border: 1px solid var(--border); padding: 10px 18px; font-size: 12px; }
+.btn-row { display: flex; gap: 10px; margin-top: 12px; }
+
+/* answer reveal */
+.answer-reveal { background: var(--green-bg); border: 1px solid var(--green-border); border-radius: 12px; padding: 16px 20px; animation: fadeSlideIn 0.3s ease; }
+.reveal-label { font-size: 10px; letter-spacing: 3px; color: var(--green); text-transform: uppercase; margin-bottom: 8px; }
+.reveal-text { font-size: 15px; color: var(--green-text); line-height: 1.6; }
+.mem-trick { margin-top: 12px; background: rgba(255,179,0,0.06); border: 1px solid rgba(255,179,0,0.15); border-radius: 8px; padding: 10px 14px; }
+.mem-label { font-size: 10px; letter-spacing: 2px; color: var(--amber); text-transform: uppercase; margin-bottom: 4px; }
+.mem-text { font-size: 13px; color: #e8d9a0; }
+
+/* weak points */
+.weak-section { background: var(--bg3); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+.weak-title { font-size: 10px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+.weak-title button { background: none; border: none; color: var(--muted); cursor: pointer; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; }
+.weak-title button:hover { color: var(--amber); }
+.weak-list { display: flex; flex-direction: column; gap: 8px; }
+.weak-item { padding: 8px 12px; background: #2e0f0f; border: 1px solid #5a2d2d; border-radius: 8px; font-size: 12px; color: #f0c8c8; line-height: 1.4; }
+.weak-empty { font-size: 12px; color: var(--muted); }
+
+/* end screen */
+.end-screen { text-align: center; padding: 40px 20px; animation: fadeSlideIn 0.5s ease; }
+.end-orb { width: 80px; height: 80px; margin: 0 auto 20px; }
+.end-title { font-family: var(--display); font-size: 36px; letter-spacing: 3px; color: var(--amber); margin-bottom: 8px; }
+.end-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.end-stats { display: flex; gap: 16px; justify-content: center; margin-bottom: 28px; flex-wrap: wrap; }
+.end-stat { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 16px 24px; text-align: center; }
+.end-stat-num { font-family: var(--display); font-size: 40px; line-height: 1; }
+.end-stat-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); margin-top: 4px; }
+.end-copie-line { font-size: 14px; color: #9b85cc; line-height: 1.6; margin-bottom: 28px; font-style: italic; }
+
+/* filter bar */
+.filter-bar { width: 100%; max-width: 700px; padding: 8px 20px 0; display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 10; }
+.filter-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-family: var(--mono); cursor: pointer; letter-spacing: 1px; transition: all 0.15s; }
+.filter-btn:hover, .filter-btn.active { background: rgba(124,58,237,0.15); border-color: var(--purple); color: #c4a8ff; }
+
+/* ticker */
+.ticker-wrap { position: fixed; bottom: 0; left: 0; right: 0; height: 32px; background: rgba(8,6,16,0.95); border-top: 1px solid var(--border); overflow: hidden; z-index: 100; display: flex; align-items: center; }
+.ticker-track { display: flex; gap: 28px; white-space: nowrap; animation: tickerScroll 28s linear infinite; font-size: 10px; letter-spacing: 2px; color: var(--muted); padding-left: 100%; }
+@keyframes tickerScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.ticker-sep { color: #2d1f4e; }
+.ticker-hl { color: var(--amber); }
+
+/* disclaimer */
+.disclaimer {
+  font-size: 9px; color: #2d1f4e; letter-spacing: 1px;
+  text-align: center; padding: 6px 20px 38px;
+  line-height: 1.6; max-width: 700px;
+  position: relative; z-index: 10;
+}
+
+/* animations */
+@keyframes fadeSlideIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+/* ─── TIMED INTERRUPT OVERLAY ─── */
+#interrupt-overlay {
+  position: fixed; inset: 0;
+  background: rgba(4,2,12,0.97);
+  z-index: 3000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#interrupt-overlay.show { display: flex; }
+.interrupt-stage {
+  width: 100%; max-width: 600px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0;
+}
+.interrupt-tag {
+  font-family: var(--display);
+  font-size: 11px; letter-spacing: 6px;
+  color: var(--amber);
+  background: rgba(255,179,0,0.08);
+  border: 1px solid rgba(255,179,0,0.3);
+  border-radius: 20px; padding: 4px 16px;
+  margin-bottom: 16px;
+  animation: pulseTag 1.4s ease-in-out infinite;
+}
+.interrupt-orb {
+  width: 70px; height: 70px;
+  filter: drop-shadow(0 0 20px rgba(255,179,0,0.8));
+  animation: copieFloat 3.2s ease-in-out infinite;
+  margin-bottom: 18px;
+}
+.interrupt-q-box {
+  width: 100%;
+  background: #0f0f1a;
+  border: 1px solid rgba(255,179,0,0.25);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+.interrupt-q-label {
+  font-size: 10px; letter-spacing: 3px; color: var(--amber);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+#interrupt-q-text {
+  font-size: 15px; line-height: 1.7; color: #f0eaff;
+}
+.interrupt-input-box {
+  width: 100%;
+  background: #14112b;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.interrupt-input-label {
+  font-size: 10px; letter-spacing: 2px; color: var(--muted);
+  text-transform: uppercase;
+}
+#interrupt-options {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.i-opt {
+  background: #0f0f1a;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: var(--mono); font-size: 13px;
+  color: var(--text); cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+.i-opt:hover { border-color: var(--purple); color: #c4a8ff; background: rgba(124,58,237,0.1); }
+.i-opt.correct { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); pointer-events: none; }
+.i-opt.wrong { background: #2e0f0f; border-color: #5a2d2d; color: #f0c8c8; pointer-events: none; }
+.i-opt.reveal-correct { background: var(--green-bg); border-color: var(--green-border); color: var(--green-text); pointer-events: none; }
+
+/* "AGAIN" screen */
+#again-screen {
+  position: fixed; inset: 0;
+  background: #080600;
+  z-index: 4000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+#again-screen.show { display: flex; }
+#again-word {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(72px, 22vw, 160px);
+  color: var(--amber);
+  letter-spacing: 8px;
+  text-shadow: 0 0 40px rgba(255,179,0,0.5), 0 0 100px rgba(255,179,0,0.2);
+  animation: againPulse 0.6s ease-out forwards;
+}
+@keyframes againPulse {
+  0% { transform: scale(0.7); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+#again-sub {
+  font-size: 11px; letter-spacing: 4px; color: var(--muted);
+  text-transform: uppercase; margin-top: 12px;
+  opacity: 0; animation: fadeIn 0.4s ease 0.5s forwards;
+}
+
+/* timer ring */
+#interrupt-timer-ring {
+  position: absolute; top: 16px; right: 20px;
+  width: 44px; height: 44px;
+}
+#interrupt-timer-ring svg { transform: rotate(-90deg); }
+#timer-ring-track { fill: none; stroke: #1a1130; stroke-width: 4; }
+#timer-ring-fill { fill: none; stroke: var(--amber); stroke-width: 4; stroke-linecap: round;
+  stroke-dasharray: 113; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+#timer-ring-text {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: var(--amber); font-family: var(--mono);
+}
+
+@media (max-width: 500px) {
+  .copie-speech { gap: 10px; }
+  .speech-orb-wrap { width: 44px; }
+  .speech-orb { width: 44px; height: 44px; }
+  .host-orb { width: 60px; height: 60px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ BOOT OVERLAY ═══ -->
+<div id="boot-overlay">
+  <canvas id="boot-particle-canvas"></canvas>
+  <div id="copie-boot-stage">
+    <svg id="boot-copie-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <defs>
+        <radialGradient id="bcg-body" cx="42%" cy="35%" r="65%">
+          <stop offset="0%"  stop-color="#ffe97a"/>
+          <stop offset="45%" stop-color="#ffb300"/>
+          <stop offset="100%" stop-color="#c04a00"/>
+        </radialGradient>
+        <radialGradient id="bcg-shine" cx="38%" cy="28%" r="40%">
+          <stop offset="0%"  stop-color="rgba(255,255,220,0.45)"/>
+          <stop offset="100%" stop-color="rgba(255,255,220,0)"/>
+        </radialGradient>
+        <radialGradient id="bcg-iris-l" cx="40%" cy="35%" r="60%">
+          <stop offset="0%"  stop-color="#3a0030"/>
+          <stop offset="100%" stop-color="#1a0014"/>
+        </radialGradient>
+        <radialGradient id="bcg-iris-r" cx="40%" cy="35%" r="60%">
+          <stop offset="0%"  stop-color="#3a0030"/>
+          <stop offset="100%" stop-color="#1a0014"/>
+        </radialGradient>
+        <mask id="b-crescent-mask">
+          <circle cx="60" cy="60" r="52" fill="white"/>
+          <circle cx="60" cy="94" r="48" fill="black"/>
+        </mask>
+        <filter id="b-glow" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle id="b-glow-ring" cx="60" cy="60" r="56" fill="none" stroke="rgba(255,179,0,0.18)" stroke-width="3" filter="url(#b-glow)"/>
+      <g id="b-face">
+        <circle cx="60" cy="60" r="52" fill="url(#bcg-body)"/>
+        <ellipse cx="60" cy="96" rx="38" ry="14" fill="rgba(80,20,0,0.35)"/>
+        <circle cx="60" cy="60" r="52" fill="url(#bcg-shine)"/>
+        <ellipse id="b-eye-l-iris" cx="44" cy="52" rx="7" ry="8" fill="url(#bcg-iris-l)"/>
+        <ellipse id="b-eye-l" cx="44" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="46" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+        <ellipse id="b-eye-r-iris" cx="76" cy="52" rx="7" ry="8" fill="url(#bcg-iris-r)"/>
+        <ellipse id="b-eye-r" cx="76" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="78" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+      </g>
+      <g id="b-crescent" opacity="0">
+        <circle cx="60" cy="60" r="52" fill="url(#bcg-body)" mask="url(#b-crescent-mask)"/>
+        <circle cx="60" cy="60" r="52" fill="url(#bcg-shine)" mask="url(#b-crescent-mask)"/>
+      </g>
+      <g id="b-sparkles" opacity="0">
+        <text x="32" y="46" font-size="16" text-anchor="middle" fill="#1a0014" font-family="serif">✦</text>
+        <text x="88" y="46" font-size="16" text-anchor="middle" fill="#1a0014" font-family="serif">✦</text>
+        <text x="14" y="38" font-size="11" text-anchor="middle" fill="rgba(255,179,0,0.8)">✦</text>
+        <text x="106" y="38" font-size="11" text-anchor="middle" fill="rgba(255,179,0,0.8)">✦</text>
+      </g>
+      <path d="M48,12 Q60,2 72,12" fill="none" stroke="rgba(255,179,0,0.5)" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+    </svg>
+    <div id="boot-sig">COPIE // DOCUMENTATION UNIT</div>
+    <div id="boot-text"><span class="cur"></span></div>
+  </div>
+</div>
+
+<!-- ═══ HOST INTRO OVERLAY ═══ -->
+<div id="host-overlay">
+  <div class="host-stage">
+    <div class="host-broadcast-tag">◈ LIVE BROADCAST ◈</div>
+    <div class="host-orb-wrap">
+      <svg class="host-orb" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+        <defs>
+          <radialGradient id="hog" cx="42%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#ffe97a"/>
+            <stop offset="45%" stop-color="#ffb300"/>
+            <stop offset="100%" stop-color="#c04a00"/>
+          </radialGradient>
+        </defs>
+        <circle cx="60" cy="60" r="52" fill="url(#hog)"/>
+        <ellipse id="ho-eye-l" cx="44" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="46" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+        <ellipse id="ho-eye-r" cx="76" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="78" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+    </div>
+    <div class="host-bubble">
+      <div class="host-who">COPIE // HOST</div>
+      <div id="host-speech-text"><span class="cur"></span></div>
+    </div>
+    <div class="host-rules" id="host-rules">
+      <div class="rules-label">TODAY'S FORMAT</div>
+      <div class="rules-list" id="rules-list">
+        <div class="rule-item" id="r1"><span class="rule-num">01 //</span><span>I ask the question. You say your answer OUT LOUD before you do anything else.</span></div>
+        <div class="rule-item" id="r2"><span class="rule-num">02 //</span><span>When you're ready, hit REVEAL ANSWER. See how close you were.</span></div>
+        <div class="rule-item" id="r3"><span class="rule-num">03 //</span><span>Mark GOT IT or MISSED IT honestly. No one's watching. Except me.</span></div>
+        <div class="rule-item" id="r4"><span class="rule-num">04 //</span><span>Every miss gets logged as a weak point. At the end, you drill those until they're yours.</span></div>
+        <div class="rule-item" id="r5"><span class="rule-num">05 //</span><span>There are 45 questions total — 25 oral exam + 20 midterm practice. Filter by category or run them all. Your weak spots will be waiting.</span></div>
+      </div>
+    </div>
+    <button id="host-start-btn" onclick="startSession()">BEGIN SESSION →</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<canvas id="bg-canvas"></canvas>
+<div class="scanlines"></div>
+<div class="vignette"></div>
+
+<div id="app">
+  <div class="top-bar">
+    <div class="top-bar-left">
+      <svg class="top-copie-orb" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="tfg" cx="42%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#ffe97a"/>
+            <stop offset="45%" stop-color="#ffb300"/>
+            <stop offset="100%" stop-color="#c04a00"/>
+          </radialGradient>
+        </defs>
+        <circle cx="60" cy="60" r="52" fill="url(#tfg)"/>
+        <ellipse cx="44" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="46" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+        <ellipse cx="76" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="78" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+      <div>
+        <div class="bar-title">COPIE // ORAL EXAM</div>
+        <div class="bar-sub">CASE MANAGEMENT · SAY YOUR ANSWER OUT LOUD</div>
+      </div>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>LIVE</div>
+  </div>
+
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('all', this)">ALL QUESTIONS</button>
+    <button class="filter-btn" onclick="setFilter('midterm', this)">📋 MIDTERM ONLY</button>
+    <button class="filter-btn" onclick="setFilter('oral', this)">🎙 ORAL ONLY</button>
+    <button class="filter-btn" onclick="setFilter('weak', this)">⚑ WEAK POINTS ONLY</button>
+    <button class="filter-btn" onclick="setFilter('random', this)">🔀 SHUFFLE</button>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span id="q-label">QUESTION 1 OF 25</span>
+      <span id="pct-label">0%</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="score-bar">
+    <div class="score-chip score-got" id="score-got">✓ 0 GOT IT</div>
+    <div class="score-chip score-miss" id="score-miss">✗ 0 MISSED</div>
+  </div>
+
+  <div class="main-area" id="main-area"></div>
+
+  <div class="disclaimer">
+    ◈ &nbsp; All characters, systems, and scenarios depicted in this interface are fictional and exist within the CORVID / CUERV.IO extended universe. COPIE is a constructed AI documentation character. This tool is a study aid. Any resemblance to an actual examination board, licensing body, or broadcast network is entirely a performance.  &nbsp; ◈
+    <br>CUERV.IO IS PERFORMANCE ART. COPIE IS NOT REAL. YOU ARE, THOUGH. GOOD LUCK.
+  </div>
+</div>
+
+<!-- ═══ TIMED INTERRUPT OVERLAY ═══ -->
+<div id="interrupt-overlay">
+  <div id="interrupt-timer-ring">
+    <svg width="44" height="44" viewBox="0 0 44 44">
+      <circle id="timer-ring-track" cx="22" cy="22" r="18"/>
+      <circle id="timer-ring-fill" cx="22" cy="22" r="18"/>
+    </svg>
+    <div id="timer-ring-text">--</div>
+  </div>
+  <div class="interrupt-stage">
+    <div class="interrupt-tag">◈ SCHEDULED CHECK-IN ◈</div>
+    <svg class="interrupt-orb" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="iog" cx="42%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#ffe97a"/>
+        <stop offset="45%" stop-color="#ffb300"/>
+        <stop offset="100%" stop-color="#c04a00"/>
+      </radialGradient></defs>
+      <circle cx="60" cy="60" r="52" fill="url(#iog)"/>
+      <ellipse cx="44" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+      <ellipse cx="46" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+      <ellipse cx="76" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+      <ellipse cx="78" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+    </svg>
+    <div class="interrupt-q-box">
+      <div class="interrupt-q-label">COPIE ASKS —</div>
+      <div id="interrupt-q-text"><span class="cur"></span></div>
+    </div>
+    <div class="interrupt-input-box">
+      <div class="interrupt-input-label">SELECT YOUR ANSWER</div>
+      <div id="interrupt-options"></div>
+    </div>
+    <div id="interrupt-feedback" style="font-size:13px;color:var(--muted);letter-spacing:1px;text-align:center;min-height:1.4em;"></div>
+  </div>
+</div>
+
+<!-- ═══ AGAIN SCREEN ═══ -->
+<div id="again-screen">
+  <div id="again-word">AGAIN.</div>
+  <div id="again-sub">one wrong answer. back to the start.</div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <span>CUERV.IO // ORAL EXAM BROADCAST</span>
+    <span class="ticker-sep">◈</span>
+    <span>CASE MANAGEMENT PRACTICE · SUMMERS CH 1–26</span>
+    <span class="ticker-sep">◈</span>
+    <span>COPIE ONLINE // <span class="ticker-hl">ALL SYSTEMS NOMINAL</span></span>
+    <span class="ticker-sep">◈</span>
+    <span>SAY THE ANSWER OUT LOUD BEFORE YOU REVEAL</span>
+    <span class="ticker-sep">◈</span>
+    <span>WEAK POINTS LOGGED AUTOMATICALLY</span>
+    <span class="ticker-sep">◈</span>
+    <span>CUERV.IO // ORAL EXAM BROADCAST</span>
+    <span class="ticker-sep">◈</span>
+    <span>CASE MANAGEMENT PRACTICE · SUMMERS CH 1–26</span>
+    <span class="ticker-sep">◈</span>
+    <span>COPIE ONLINE // <span class="ticker-hl">ALL SYSTEMS NOMINAL</span></span>
+    <span class="ticker-sep">◈</span>
+    <span>SAY THE ANSWER OUT LOUD BEFORE YOU REVEAL</span>
+    <span class="ticker-sep">◈</span>
+    <span>WEAK POINTS LOGGED AUTOMATICALLY</span>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const ALL_QUESTIONS = [
+  { q: "What are the 4 steps of case management?", a: "Assessment, Planning, Linking, Monitoring", mem: "A-P-L-M: Always Plan, Link, Monitor", ch: "Ch 1" },
+  { q: "What does 'linking' mean in the case management process?", a: "Referring the client to services that will actually carry out the plan — the case manager connects, not always delivers.", mem: "A-P-L-M: Always Plan, Link, Monitor", ch: "Ch 1" },
+  { q: "What are the 3 requirements for valid informed consent?", a: "Capacity, Comprehension, Voluntariness (the 3 Cs)", mem: "3 Cs of Consent: Capacity, Comprehension, Choice (Voluntariness)", ch: "Ch 2" },
+  { q: "Name FOUR situations where you must break confidentiality.", a: "Danger to self or others / Child abuse or neglect / Hospitalization is needed / Client discloses intent to commit a crime", mem: null, ch: "Ch 2" },
+  { q: "What are the 3 levels of the ecological model, and what does each cover?", a: "Micro = client's own personality and affect. Meso = family, church, close friends. Macro = political system, economy, education.", mem: "Micro=Me, Meso=My People, Macro=My World", ch: "Ch 3" },
+  { q: "What is the escalation chain that starts with stereotypes?", a: "Stereotypes → Ethnocentrism → Prejudice → Conflict", mem: null, ch: "Ch 4" },
+  { q: "What are the 3 core helping attitudes?", a: "Warmth, Genuineness, Empathy", mem: null, ch: "Ch 5" },
+  { q: "What is the difference between transference and countertransference?", a: "Transference = client's feelings (positive or negative) projected onto YOU based on someone from their past. Countertransference = YOUR unresolved feelings projected onto the client.", mem: "T = Their feelings about you; CT = Your feelings about them", ch: "Ch 5" },
+  { q: "Who owns a problem, and what does that mean?", a: "The person whose needs are NOT being met owns the problem — and is therefore responsible for solving it. If the worker owns a problem, the worker must raise it.", mem: "Who's not getting their needs met? THEY own it.", ch: "Ch 6" },
+  { q: "What is the difference between feedback and praise? Which should you use?", a: "Praise is vague ('great job!'). Feedback gives usable, specific information ('you had all the info ready — you were organized'). Use feedback.", mem: "Feel it, Name it, Say it back — ONE sentence", ch: "Ch 7" },
+  { q: "Walk me through the 3 steps of reflective listening.", a: "1. Listen to what the person tells you. 2. Identify the predominant feeling you're hearing. 3. Construct ONE statement that reflects that feeling back.", mem: "Listen → Identify → Reflect (LIR)", ch: "Ch 8" },
+  { q: "What makes an open question bad? Give an example.", a: "Closing it with a word like how, when, why, where, or what. Example: 'Tell me about HOW you got here' — 'how' forces a single-answer response.", mem: "Open = Tell me / Can you; Never end with: How/When/Why/Where/What", ch: "Ch 9" },
+  { q: "What are the 4 parts of a complete I-Message?", a: "Your feelings + Non-blaming description of what you observed + The tangible effect on you + Invitation to collaborate", mem: "Feel + Fact + Effect + Invite = Complete I-Message", ch: "Ch 10" },
+  { q: "What is the #1 mistake when working with angry clients? What are the 4 A's?", a: "#1 mistake: taking the anger personally. 4 A's: Appreciate → Ask (1-2 questions) → Agree (find a kernel of truth) → Act (focus on solution)", mem: "Appreciate → Ask → Agree → Act (4 A's of disarming)", ch: "Ch 11" },
+  { q: "What are the 5 stages of change? Is ambivalence resistance?", a: "Pre-contemplation → Contemplation → Developing a plan → Implementing → Maintaining. No — ambivalence is NORMAL, not resistance.", mem: "PC-PC-P-I-M: Pre, Contemplate, Plan, Implement, Maintain", ch: "Ch 12" },
+  { q: "What is a 'chief complaint' in intake, and what should you always include at the end of it?", a: "The chief complaint is why the client called TODAY — not their general history. Always end it with a note on how the client sounded on the phone.", mem: "Chief Complaint = Why TODAY, not why ever", ch: "Ch 14" },
+  { q: "What is the 'See Billy' test, and what does it distinguish?", a: "If you can SEE or HEAR it, it's an objective. If you can't, it's a goal.", mem: "Can you SEE it or HEAR it? → Objective. Can't? → Goal.", ch: "Ch 25" },
+  { q: "How does a goal differ from an objective in format?", a: "Goal: '[Client] will [positive outcome] as evidenced by...' — broad, one sentence. Objective: '[Client] will [specific observable action] by [target date]' — measurable, visible.", mem: "Can you SEE it or HEAR it? → Objective. Can't? → Goal.", ch: "Ch 25" },
+  { q: "What are the 4 things every contact note must include?", a: "Focus of the interview, Assessment (behavior/appearance/affect), Resolution, Follow-up plan", mem: "FARF: Focus → Assessment → Resolution → Follow-up", ch: "Ch 23" },
+  { q: "How do you correct an error in a paper case file?", a: "Draw a single line through the error → write 'error' → write the correction → sign, initial, and date. Never use correction fluid or pencil.", mem: null, ch: "Ch 23" },
+  { q: "What are the 5 reasons for termination?", a: "Mutual agreement / Client dies or moves / Funding ends / Client doesn't want services / Client disappears", mem: "Termination = Meeting → Letter → Discharge Summary (in that order)", ch: "Ch 26" },
+  { q: "What does a discharge summary include?", a: "Diagnoses, medications, reason for discharge, presenting problem, goals/objectives, client participation, progress, unaddressed problems, client status at intake vs. termination, location attempts if disappeared.", mem: "Termination = Meeting → Letter → Discharge Summary (in that order)", ch: "Ch 26" },
+  { q: "What is the correct chart order for a client file?", a: "Face sheet → Inquiry/referral form → Verification letter → Assessment/social history → Release forms → Service plan → Referrals", mem: "FIVRS + P: Face, Inquiry, Verification, Releases, Service plan + Referrals", ch: "Ch 22" },
+  { q: "What are the 3 parts of a brief social history?", a: "Presenting Problem / Background / Impressions & Recommendations", mem: "PBR: Problem → Background → Recommendations", ch: "Ch 16" },
+  { q: "What is the difference between monitoring and follow-up?", a: "Monitoring = ongoing check-ins to ensure services are being received as planned. Follow-up = going back to check specifically after a crisis or plan change.", mem: "Follow-up = after crisis; Monitoring = ongoing check-ins", ch: "Ch 24" },
+
+  // ── MIDTERM PRACTICE (MCQ) ──
+  { q: "Which of the following are case management tasks? A) Assessment  B) Planning  C) Linking  D) All the above", a: "D) All the above — Assessment, Planning, and Linking are all core case management tasks.", mem: "A-P-L-M: Assess, Plan, Link, Monitor", ch: "Midterm" },
+  { q: "__________ refers to working with other agencies or systems in a person's life.", a: "D) Service coordination — working across agencies and external systems on the client's behalf.", mem: "Service coordination = outside agencies; Linking = connecting client to specific services", ch: "Midterm" },
+  { q: "Which of the following is NOT a skill needed to be an effective case manager?  A) Work effectively with people to promote their growth  B) Possess knowledge of state and federal laws and regulations  C) Identify what your client needs  D) Keep accurate and well-organized records", a: "B) Possess knowledge of state and federal laws and regulations — that's a lawyer skill, not a case manager skill.", mem: "Case managers need people skills + record skills, not law school", ch: "Midterm" },
+  { q: "A __________ occurs when the case manager and a person to whom they are giving services have more than one relationship.", a: "C) Dual relationship — having more than one role with a client (e.g., worker AND neighbor).", mem: "Dual = two hats on one head. Always a boundary concern.", ch: "Midterm" },
+  { q: "When an individual is informed and consents to treatment, it is known as __________.", a: "D) Informed consent — the client understands and agrees to the service/treatment.", mem: "Informed = they KNOW. Consent = they SAY YES.", ch: "Midterm" },
+  { q: "Which of the following is NOT a characteristic of an individualistic culture?  A) Require that people fit into the group  B) Promote self-fulfillment  C) Individual goals are emphasized  D) Support unique individual beliefs", a: "A) Require that people fit into the group — that's collectivistic, not individualistic.", mem: "Individualistic = ME first. Collectivistic = group first.", ch: "Midterm" },
+  { q: "Which of the following is NOT a characteristic of a collectivistic culture?  A) Emphasize belonging to groups  B) The in-group influence is specific to times and place  C) Shared in-group beliefs  D) Group goals are emphasized", a: "B) The in-group influence is specific to times and place — collectivistic in-group influence is broad and ongoing, not time/place limited.", mem: "Collectivistic = group loyalty everywhere, always", ch: "Midterm" },
+  { q: "Which of the following is NOT a basic helping attitude a worker needs?  A) Agreeableness  B) Empathy  C) Warmth  D) Genuineness", a: "A) Agreeableness — the core three are Empathy, Warmth, and Genuineness. 'Agreeableness' is a personality trait, not a professional helping attitude.", mem: "EWG: Empathy, Warmth, Genuineness — the holy trinity of helping", ch: "Midterm" },
+  { q: "__________ is when the case manager projects onto the client certain emotions and attitudes because the person reminds the case manager of someone from their past.", a: "C) Countertransference — the worker's feelings bleeding onto the client.", mem: "Counter = YOUR stuff going TOWARD the client", ch: "Midterm" },
+  { q: "Which of the following is NOT a reason to know who owns the problem?  A) Boundaries are clarified  B) The client loses opportunities to grow  C) The case manager has the opportunity to solve the problem  D) You will know who is responsible for solving the problem", a: "C) The case manager has the opportunity to solve the problem — that's NOT a reason. Knowing who owns it means the CLIENT has the chance to grow and take responsibility, not the worker.", mem: "Problem ownership = client empowerment, not worker opportunity", ch: "Midterm" },
+  { q: "A __________ is a question that requires only a single answer and is used to obtain facts or specific information.", a: "D) Closed question — limits the response to a specific fact (yes/no, name, date, etc.).", mem: "Closed = door shut. One answer only.", ch: "Midterm" },
+  { q: "An __________ is a question that is used to solicit information the individual believes is significant.", a: "B) Open question — invites the client to share what THEY think matters.", mem: "Open = door open. You lead, I'll follow.", ch: "Midterm" },
+  { q: "Which of the following is a purpose of reflective listening?  A) Illustrates your acceptance of where the person is at that moment  B) Creates an opportunity for you to correct any misperceptions  C) Lets people know you have heard their concerns and feelings accurately  D) All the above", a: "D) All the above — reflective listening serves all three purposes.", mem: "LIR: Listen → Identify → Reflect. Does all three things.", ch: "Midterm" },
+  { q: "True or False: Monitoring is a case management task and occurs when the case manager monitors the services given to the client.", a: "TRUE — Monitoring is the 4th task in case management (A-P-L-M). The case manager tracks whether services are actually being delivered.", mem: "A-P-L-M: Monitor = the M. Ongoing, not just at the end.", ch: "Midterm" },
+  { q: "True or False: Ethical behavior can be viewed from three different aspects: aspirational, personal, and professional.", a: "FALSE — The three aspects are aspirational, mandatory, and professional. Not 'personal.'", mem: "Ethics = Aspirational + Mandatory + Professional", ch: "Midterm" },
+  { q: "True or False: The micro level, meso level, and macro level are the three levels of the ecological model.", a: "TRUE — Micro (individual), Meso (close relationships/groups), Macro (society/systems).", mem: "Micro=Me, Meso=My People, Macro=My World", ch: "Midterm" },
+  { q: "True or False: Ethnocentrism means that we use the standards common in our own culture to judge the behavior and culture of other people.", a: "TRUE — Ethnocentrism = using your own culture as the measuring stick for everyone else.", mem: "Ethno = culture. Centrism = you put it at the center.", ch: "Midterm" },
+  { q: "True or False: Projection is when the client holds a collection of feelings and attitudes about the case manager.", a: "FALSE — That's Transference. Projection is when the case manager attributes their own feelings to the client.", mem: "Projection = worker's stuff. Transference = client's feelings about worker.", ch: "Midterm" },
+  { q: "True or False: Routine decisions are made when a wise case manager knows how much to help and when to stand back.", a: "FALSE — That describes a 'practice wisdom' decision, not a routine decision. Routine decisions are standard protocol responses.", mem: "Routine = by the book. Practice wisdom = knowing when to back off.", ch: "Midterm" },
+  { q: "True or False: Good responses are constructive responses that promote rapport and build trust, while poor responses block rapport, understanding, and trust.", a: "TRUE — Good responses build the relationship; poor ones damage it.", mem: "Good response = builds the bridge. Poor response = burns it.", ch: "Midterm" },
+
+  // ── LSAT PREP (Logical Reasoning style) ──
+  { q: "An argument concludes that a city's new bike-lane program reduced traffic accidents, citing that accidents fell 20% the year after the lanes were installed. What's the most likely flaw?", a: "It assumes the bike lanes caused the drop without ruling out other explanations (e.g., a new speed-limit law, fewer cars on the road that year, a broader regional trend).", mem: "Correlation ≠ Causation — always ask 'what else changed?'", ch: "LSAT Prep" },
+  { q: "Strengthen vs. Weaken: if an argument concludes 'X causes Y,' what kind of evidence weakens it?", a: "Evidence of an alternative cause for Y, evidence that Y occurs without X (or X without Y), or evidence that the causal direction is reversed (Y causes X).", mem: "Weaken causal claims: Alt cause / No X→No Y fails / Reversed direction", ch: "LSAT Prep" },
+  { q: "What is a 'necessary condition' vs. a 'sufficient condition,' and how do you symbolize 'All A are B'?", a: "A sufficient condition guarantees the outcome; a necessary condition is required but doesn't guarantee it. 'All A are B' means A is sufficient for B: A → B.", mem: "Sufficient = enough on its own. Necessary = required but not enough.", ch: "LSAT Prep" },
+  { q: "In a conditional 'If A, then B,' what is the valid contrapositive, and what is the invalid 'mistaken negation'?", a: "Contrapositive (valid): If not B, then not A. Mistaken negation (invalid): If not A, then not B.", mem: "Flip AND negate = valid. Negate only = trap.", ch: "LSAT Prep" },
+  { q: "An argument says 'Most successful entrepreneurs are risk-takers. Maria is a risk-taker. So Maria is likely a successful entrepreneur.' What's the flaw?", a: "It illicitly reverses a conditional/statistical relationship — being a risk-taker doesn't mean most risk-takers are successful entrepreneurs.", mem: "Affirming the consequent: Most A are B ≠ Most B are A", ch: "LSAT Prep" },
+  { q: "What's the difference between a 'flaw' question and a 'parallel reasoning' question?", a: "A flaw question asks you to identify and describe the logical error in the argument. A parallel reasoning question asks you to find another argument with the same structure (and often the same flaw).", mem: "Flaw = name the error. Parallel = find its twin.", ch: "LSAT Prep" },
+  { q: "An argument concludes a company should cut prices because lower prices increased sales for a competitor. What assumption is required?", a: "That the conditions facing the company are similar enough to the competitor's that the same strategy would produce a similar result (i.e., the situations are analogous).", mem: "Analogy arguments assume: 'the two cases are similar enough'", ch: "LSAT Prep" },
+  { q: "What does a 'main point' or 'main conclusion' question ask, and what's a common wrong-answer trap?", a: "It asks for the overall claim the rest of the argument supports. A common trap is choosing a premise or an intermediate conclusion that supports the real main point rather than the main point itself.", mem: "Main point = the thing everything else is FOR, not a stepping stone", ch: "LSAT Prep" },
+  { q: "What is a 'sufficient assumption' (justify the conclusion) question, and how does it differ from a 'necessary assumption' question?", a: "A sufficient assumption, if added, would make the conclusion follow logically (guarantees it). A necessary assumption is something the argument requires to be true, but it alone may not guarantee the conclusion.", mem: "Sufficient = closes the gap completely. Necessary = a missing plank, not the whole bridge.", ch: "LSAT Prep" },
+  { q: "How can you test whether a statement is a 'necessary assumption' of an argument?", a: "Use the negation test: negate the statement and see if it destroys the argument's logic. If the argument falls apart when the assumption is false, it's necessary.", mem: "Negation test: flip it — if the argument breaks, it was necessary", ch: "LSAT Prep" },
+  { q: "An argument says 'Critics claim this policy will fail. But the critics work for a rival firm, so their claim should be dismissed.' What flaw is this?", a: "Ad hominem / source attack — rejecting a claim based on who is making it (their motives or interests) rather than addressing the substance of the claim.", mem: "Attack the argument, not the arguer", ch: "LSAT Prep" },
+  { q: "What's the difference between a 'resolve the paradox' question and a 'strengthen' question?", a: "A resolve-the-paradox question presents two seemingly conflicting facts and asks for a statement that explains how both can be true. A strengthen question asks for a statement that makes the argument's conclusion more likely to be true.", mem: "Paradox = explain BOTH facts. Strengthen = boost ONE conclusion.", ch: "LSAT Prep" },
+  { q: "An argument concludes 'Therefore, the new policy is a good idea' after listing only benefits. What's missing, and what question type would test this?", a: "It's missing any consideration of costs or drawbacks — an argument that only lists pros and concludes 'good idea overall' fails to weigh both sides. A weaken question would exploit this by introducing a major cost.", mem: "One-sided lists of pros/cons ignore the OTHER side", ch: "LSAT Prep" },
+  { q: "What is the 'whole-to-part' (composition) flaw, and the 'part-to-whole' (division) flaw?", a: "Composition: assuming what's true of the parts must be true of the whole (e.g., 'every player is excellent, so the team is excellent'). Division: assuming what's true of the whole must be true of each part (e.g., 'the team is excellent, so every player is excellent').", mem: "Composition: parts→whole. Division: whole→parts. Both can fail.", ch: "LSAT Prep" },
+  { q: "How do you identify the role of a claim in an argument (e.g., 'is the bolded portion a premise, the conclusion, or a position the author rejects')?", a: "Trace the argument's structure: ask what supports what. If the claim is supported by other statements and nothing else supports it, it's likely the conclusion. If it supports another claim, it's a premise. If the author argues against it, it's a position being refuted.", mem: "Ask: does this claim SUPPORT something, or get SUPPORTED?", ch: "LSAT Prep" },
+  { q: "What is an 'equivocation' flaw, and give a simple example.", a: "Equivocation occurs when an argument uses a word in one sense in a premise and a different sense in the conclusion. Example: 'The sign said fine for parking here, so it must be fine to park here' — 'fine' means a penalty in one sense and 'acceptable' in the other.", mem: "Same word, different meaning = equivocation", ch: "LSAT Prep" },
+  { q: "What's the key difference between an inference question ('must be true') and a strengthen/weaken question?", a: "Inference questions ask what must logically follow from the given statements alone — no new information, no evaluating an argument. Strengthen/weaken questions involve an argument with a conclusion, and ask you to evaluate or add information that affects how well the premises support it.", mem: "Inference: just follow the facts. Strengthen/Weaken: judge an argument.", ch: "LSAT Prep" },
+  { q: "An argument states 'Every member of the committee voted yes, so the vote was unanimous, so the proposal must be good.' What unstated assumption links the vote outcome to the proposal's quality?", a: "It assumes that a unanimous vote reflects the actual merit of the proposal (i.e., that the committee's judgment is a reliable indicator of quality) rather than, say, groupthink, pressure, or self-interest.", mem: "Unanimous ≠ correct — check what's assumed about WHY they agreed", ch: "LSAT Prep" },
+  { q: "What is the 'representativeness' flaw in arguments that generalize from a sample or survey?", a: "It occurs when the argument assumes a small or unrepresentative sample reflects the larger population, without justification — e.g., generalizing from a self-selected or biased group to everyone.", mem: "Small/biased sample → big claim = representativeness flaw", ch: "LSAT Prep" },
+  { q: "What does it mean for an argument to 'beg the question' (circular reasoning)?", a: "The argument's premise essentially restates or assumes the truth of its conclusion, rather than providing independent support for it.", mem: "Circular reasoning: the conclusion is smuggled into the premise", ch: "LSAT Prep" },
+  { q: "An argument concludes 'Reducing screen time will improve students' grades' based on a study where students who voluntarily reduced screen time had higher grades. What confound weakens this?", a: "Self-selection: students motivated enough to voluntarily cut screen time may also be more disciplined/motivated students overall, so the motivation (not the screen time reduction) could explain the higher grades.", mem: "Voluntary changes = self-selection bias; look for the hidden 'motivated student' variable", ch: "LSAT Prep" },
+  { q: "What's the difference between 'some,' 'most,' and 'all' in formal logic, and why does this matter for valid inferences?", a: "'All' means 100% (A→B for every instance); 'most' means more than half; 'some' means at least one (could be all, could be just one). You generally cannot chain 'most' statements to get a valid 'most' or 'all' conclusion — e.g., 'most A are B' and 'most A are C' doesn't guarantee any overlap between B and C.", mem: "Most + Most ≠ a guaranteed overlap — don't chain 'most' statements", ch: "LSAT Prep" },
+  { q: "What is the 'straw man' flaw?", a: "Misrepresenting or oversimplifying an opponent's argument to make it easier to attack, then refuting that distorted version instead of the actual argument.", mem: "Straw man = fight a fake, weaker version of the real argument", ch: "LSAT Prep" },
+  { q: "A passage presents two scientists' competing theories. A reading comp question asks what they would 'agree on.' What's the best strategy?", a: "Look for a claim or premise both theories rely on or both authors explicitly accept, even if their conclusions differ — often a shared background fact or shared standard, not either of their main conclusions.", mem: "Agreement questions: hunt for shared premises, not shared conclusions", ch: "LSAT Prep" },
+  { q: "When an LR question asks for the 'principle' that 'justifies' or 'underlies' an argument, what are you looking for?", a: "A general rule that, if true, would bridge the gap between the argument's specific premises and its specific conclusion — essentially a sufficient assumption stated in broad/general terms rather than tied to the specific facts given.", mem: "Principle questions = sufficient assumption stated as a general rule", ch: "LSAT Prep" },
+];
+
+const OPENERS = [
+  "Alright. Here's your next one.",
+  "Good. Keep going.",
+  "Say it out loud before you look.",
+  "Don't peek yet. Think it through.",
+  "You've got this one. What do you know?",
+  "Take your time. I'm not going anywhere.",
+  "This one's worth knowing cold.",
+  "Out loud. Like you're explaining it to someone.",
+  "No skipping ahead. Say something first.",
+  "What chapter is this from? Think about it.",
+];
+const CORRECT_LINES = [
+  "There it is. That's the one.",
+  "Exactly right. Lock that one in.",
+  "Yes. That's what I wanted to hear.",
+  "Correct. Move on with confidence.",
+  "Clean answer. Well done.",
+  "That's the one. Keep that.",
+];
+const MISSED_LINES = [
+  "That's the one to drill. Read it twice.",
+  "Mark it. You'll see it again.",
+  "This is a weak point now. That's useful information.",
+  "Write it on your hand if you have to.",
+  "Missed — but now you know exactly what to study.",
+  "Logged. We'll come back to this.",
+];
+const END_LINES = [
+  "Session complete. That's the work.",
+  "All twenty-five down. Now you know your gaps.",
+  "Done. Your weak points are waiting for you below.",
+  "That's what a study session looks like. Good.",
+  "You showed up. That's already more than most.",
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let deck = [];
+let currentIdx = 0;
+let revealed = false;
+let scored = false;
+let gotCount = 0;
+let missCount = 0;
+let weakPoints = [];
+let filterMode = 'all';
+let sessionDone = false;
+
+function buildDeck(mode) {
+  if (mode === 'weak') deck = weakPoints.length ? [...weakPoints] : [...ALL_QUESTIONS];
+  else if (mode === 'midterm') deck = ALL_QUESTIONS.filter(q => q.ch === 'Midterm');
+  else if (mode === 'oral') deck = ALL_QUESTIONS.filter(q => q.ch !== 'Midterm');
+  else { deck = [...ALL_QUESTIONS]; if (mode === 'random') shuffle(deck); }
+}
+function shuffle(arr) { for (let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} }
+function rand(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+function render() {
+  updateProgress(); updateScores();
+  const area = document.getElementById('main-area');
+  area.innerHTML = '';
+  if (sessionDone) { renderEnd(area); return; }
+  const item = deck[currentIdx];
+  if (!item) { renderEnd(area); return; }
+
+  const tag = document.createElement('div');
+  tag.className = 'chapter-tag';
+  tag.textContent = item.ch + ' // ORAL QUESTION';
+  area.appendChild(tag);
+
+  area.appendChild(buildSpeech(rand(OPENERS)));
+
+  const qCard = document.createElement('div');
+  qCard.className = 'answer-section';
+  qCard.innerHTML = `<div class="answer-label">COPIE ASKS</div><div id="q-text" style="font-size:16px;line-height:1.6;color:#f0eaff;"></div>`;
+  area.appendChild(qCard);
+  typeStr(qCard.querySelector('#q-text'), item.q, 26);
+
+  const aSection = document.createElement('div');
+  aSection.className = 'answer-section';
+
+  if (!revealed) {
+    aSection.innerHTML = `
+      <div class="answer-label">YOUR TURN</div>
+      <div class="answer-prompt">Say your answer out loud — then reveal when you're ready.</div>
+      <button class="btn btn-reveal" onclick="reveal()">▶ REVEAL ANSWER</button>`;
+  } else {
+    const revDiv = document.createElement('div');
+    revDiv.className = 'answer-reveal';
+    revDiv.innerHTML = `
+      <div class="reveal-label">✓ CORRECT ANSWER</div>
+      <div class="reveal-text">${item.a.replace(/\//g,'<br>• ').replace(/^/,'• ')}</div>
+      ${item.mem?`<div class="mem-trick"><div class="mem-label">💡 MEMORY TRICK</div><div class="mem-text">${item.mem}</div></div>`:''}`;
+    aSection.appendChild(revDiv);
+
+    if (scored === 'got') aSection.appendChild(buildSpeech(rand(CORRECT_LINES), true));
+    else if (scored === 'miss') aSection.appendChild(buildSpeech(rand(MISSED_LINES), true));
+
+    if (!scored) {
+      const hw = document.createElement('div');
+      hw.style.marginTop = '16px';
+      hw.innerHTML = `<div class="answer-label">HOW DID YOU DO?</div><div class="btn-row"><button class="btn btn-got" onclick="scoreIt('got')">✓ GOT IT</button><button class="btn btn-miss" onclick="scoreIt('miss')">✗ MISSED IT</button></div>`;
+      aSection.appendChild(hw);
+    } else {
+      const br = document.createElement('div');
+      br.className = 'btn-row'; br.style.marginTop = '16px';
+      br.innerHTML = `<button class="btn btn-shuffle" onclick="skipRandom()">🔀 SKIP</button><button class="btn btn-next" onclick="nextQ()">${currentIdx<deck.length-1?'NEXT →':'FINISH SESSION'}</button>`;
+      aSection.appendChild(br);
+    }
+  }
+  area.appendChild(aSection);
+
+  if (weakPoints.length) {
+    const ws = document.createElement('div');
+    ws.className = 'weak-section';
+    ws.innerHTML = `<div class="weak-title"><span>⚑ WEAK POINTS (${weakPoints.length})</span><button onclick="drillWeak()">DRILL THESE →</button></div>
+      <div class="weak-list">${weakPoints.slice(-5).map(w=>`<div class="weak-item">${w.q}</div>`).join('')}${weakPoints.length>5?`<div class="weak-empty">...and ${weakPoints.length-5} more</div>`:''}</div>`;
+    area.appendChild(ws);
+  }
+}
+
+function buildSpeech(text, small=false) {
+  const id = Date.now()+Math.random();
+  const wrap = document.createElement('div');
+  wrap.className = 'copie-speech';
+  if (small) wrap.style.marginTop = '16px';
+  wrap.innerHTML = `
+    <div class="speech-orb-wrap">
+      <svg class="speech-orb" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <defs><radialGradient id="sg${id}" cx="42%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#ffe97a"/>
+          <stop offset="45%" stop-color="#ffb300"/>
+          <stop offset="100%" stop-color="#c04a00"/>
+        </radialGradient></defs>
+        <circle cx="60" cy="60" r="52" fill="url(#sg${id})"/>
+        <ellipse cx="44" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="46" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+        <ellipse cx="76" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+        <ellipse cx="78" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+      </svg>
+    </div>
+    <div class="speech-bubble"><div class="speech-label">COPIE</div><div class="speech-text">${text}</div></div>`;
+  return wrap;
+}
+
+function renderEnd(area) {
+  const pct = (gotCount+missCount)>0?Math.round((gotCount/(gotCount+missCount))*100):0;
+  const div = document.createElement('div');
+  div.className = 'end-screen';
+  div.innerHTML = `
+    <svg class="end-orb" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="efg" cx="42%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="#ffe97a"/><stop offset="45%" stop-color="#ffb300"/><stop offset="100%" stop-color="#c04a00"/>
+      </radialGradient></defs>
+      <circle cx="60" cy="60" r="52" fill="url(#efg)"/>
+      <ellipse cx="44" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+      <ellipse cx="46" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+      <ellipse cx="76" cy="53" rx="3.5" ry="4" fill="#0a0008"/>
+      <ellipse cx="78" cy="50" rx="1.5" ry="1.8" fill="rgba(255,255,255,0.55)"/>
+    </svg>
+    <div class="end-title">SESSION COMPLETE</div>
+    <div class="end-sub">CASE MANAGEMENT · ORAL PRACTICE ROUND</div>
+    <div class="end-stats">
+      <div class="end-stat"><div class="end-stat-num" style="color:var(--green-text)">${gotCount}</div><div class="end-stat-label">GOT IT</div></div>
+      <div class="end-stat"><div class="end-stat-num" style="color:#f0c8c8">${missCount}</div><div class="end-stat-label">MISSED</div></div>
+      <div class="end-stat"><div class="end-stat-num" style="color:var(--amber)">${pct}%</div><div class="end-stat-label">ACCURACY</div></div>
+    </div>
+    <p class="end-copie-line">"${rand(END_LINES)}"</p>
+    ${weakPoints.length?`<div class="weak-section" style="text-align:left;margin-bottom:20px;">
+      <div class="weak-title"><span>⚑ YOUR WEAK POINTS (${weakPoints.length})</span></div>
+      <div class="weak-list">${weakPoints.map(w=>`<div class="weak-item">${w.q}</div>`).join('')}</div>
+    </div>`:'<p style="color:var(--green-text);margin-bottom:20px;font-size:13px;">No weak points flagged. Solid session.</p>'}
+    <div class="btn-row" style="justify-content:center;gap:12px;flex-wrap:wrap;">
+      ${weakPoints.length?`<button class="btn btn-next" style="padding:12px 24px;" onclick="drillWeak()">⚑ DRILL WEAK POINTS</button>`:''}
+      <button class="btn btn-reveal" style="padding:12px 24px;max-width:220px;" onclick="restartFull()">↺ FULL RESTART</button>
+    </div>`;
+  area.appendChild(div);
+}
+
+// ═══════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════
+function reveal() { revealed=true; scored=false; render(); }
+function scoreIt(r) {
+  if(scored)return; scored=r;
+  if(r==='got') gotCount++;
+  else { missCount++; const item=deck[currentIdx]; if(!weakPoints.find(w=>w.q===item.q)) weakPoints.push(item); }
+  render();
+}
+function nextQ() { if(currentIdx<deck.length-1){currentIdx++;revealed=false;scored=false;render();}else{sessionDone=true;render();} }
+function skipRandom() { if(deck.length<=1)return; let n; do{n=Math.floor(Math.random()*deck.length);}while(n===currentIdx); currentIdx=n;revealed=false;scored=false;render(); }
+function drillWeak() { if(!weakPoints.length)return; deck=[...weakPoints]; currentIdx=0;revealed=false;scored=false;sessionDone=false;gotCount=0;missCount=0; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); render(); }
+function restartFull() { buildDeck(filterMode); currentIdx=0;revealed=false;scored=false;sessionDone=false;gotCount=0;missCount=0;weakPoints=[]; render(); }
+function setFilter(mode,btn) { filterMode=mode; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); buildDeck(mode); currentIdx=0;revealed=false;scored=false;sessionDone=false;gotCount=0;missCount=0;weakPoints=[]; render(); }
+function updateProgress() { const total=deck.length||ALL_QUESTIONS.length; const done=currentIdx+(sessionDone?1:0); const pct=Math.round((done/total)*100); document.getElementById('q-label').textContent=`QUESTION ${Math.min(done+1,total)} OF ${total}`; document.getElementById('pct-label').textContent=`${pct}%`; document.getElementById('progress-fill').style.width=pct+'%'; }
+function updateScores() { document.getElementById('score-got').textContent=`✓ ${gotCount} GOT IT`; document.getElementById('score-miss').textContent=`✗ ${missCount} MISSED`; }
+
+// ═══════════════════════════════════════
+// TYPEWRITER
+// ═══════════════════════════════════════
+function typeStr(el, text, speed=28) {
+  el.innerHTML='<span class="cur"></span>'; let i=0;
+  function next(){
+    if(i>=text.length){const c=el.querySelector('.cur');if(c)c.remove();return;}
+    const cur=el.querySelector('.cur'); const s=document.createElement('span'); s.textContent=text[i];
+    el.insertBefore(s,cur); i++; setTimeout(next,speed+(Math.random()*12-6));
+  }
+  next();
+}
+function typeIntoEl(el, text, speed=40) {
+  return new Promise(resolve=>{
+    el.innerHTML='<span class="cur"></span>'; let i=0;
+    function n(){
+      if(i>=text.length){const c=el.querySelector('.cur');if(c)c.remove();resolve();return;}
+      const cur=el.querySelector('.cur'); const s=document.createElement('span'); s.textContent=text[i];
+      el.insertBefore(s,cur); i++; setTimeout(n,speed+(Math.random()*16-8));
+    }
+    n();
+  });
+}
+function waitMs(ms){return new Promise(r=>setTimeout(r,ms));}
+
+// ═══════════════════════════════════════
+// HOST INTRO SEQUENCE
+// ═══════════════════════════════════════
+const HOST_SCRIPT = [
+  { text: "Hello. I'm COPIE.", delay: 1200 },
+  { text: "This is your oral exam for Case Management Practice.", delay: 1600 },
+  { text: "I'll be your host, your examiner, and your documentation unit for this session.", delay: 2000 },
+  { text: "Here's how this works.", delay: 800, showRules: true },
+];
+
+async function runHostIntro() {
+  const el = document.getElementById('host-speech-text');
+  const rulesBox = document.getElementById('host-rules');
+  const startBtn = document.getElementById('host-start-btn');
+
+  for (const beat of HOST_SCRIPT) {
+    await typeIntoEl(el, beat.text, 36);
+    await waitMs(beat.delay);
+    if (beat.showRules) {
+      rulesBox.classList.add('show');
+      await waitMs(300);
+      const items = ['r1','r2','r3','r4','r5'];
+      for (const id of items) {
+        await waitMs(220);
+        document.getElementById(id).classList.add('show');
+      }
+      await waitMs(600);
+      startBtn.classList.add('show');
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+// BACKGROUND PARTICLES (main stage)
+// ═══════════════════════════════════════
+(function initBg(){
+  const canvas=document.getElementById('bg-canvas');
+  const ctx=canvas.getContext('2d');
+  let particles=[];
+  function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+  resize(); window.addEventListener('resize',resize);
+  function mkP(c){return{x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1+0.2,vx:(Math.random()-0.5)*0.2,vy:-Math.random()*0.2-0.05,alpha:Math.random()*0.25+0.05,life:1,decay:Math.random()*0.002+0.0005,color:Math.random()>0.7?'#c0006e':'#ffb300'};}
+  for(let i=0;i<55;i++)particles.push(mkP({width:window.innerWidth,height:window.innerHeight}));
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach((p,i)=>{
+      p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
+      if(p.life<=0||p.y<-5){particles[i]=mkP(canvas);return;}
+      ctx.save();ctx.globalAlpha=p.alpha*p.life;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();ctx.restore();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════════
+// BOOT ENGINE (from copie-recap.html)
+// ═══════════════════════════════════════
+const bCanvas = document.getElementById('boot-particle-canvas');
+const bCtx    = bCanvas.getContext('2d');
+let bParticles = [], bPFrame;
+
+function bResize(){bCanvas.width=window.innerWidth;bCanvas.height=window.innerHeight;}
+bResize(); window.addEventListener('resize',bResize);
+
+function bSpawnP(){
+  return{x:Math.random()*bCanvas.width,y:bCanvas.height+5,r:Math.random()*1.2+0.3,
+    vx:(Math.random()-0.5)*0.3,vy:-Math.random()*0.4-0.1,
+    alpha:Math.random()*0.5+0.1,life:1,decay:Math.random()*0.003+0.001,
+    color:Math.random()>0.7?'#c0006e':'#ffb300'};
+}
+for(let i=0;i<80;i++){const p=bSpawnP();p.y=Math.random()*bCanvas.height;bParticles.push(p);}
+
+function bDrawP(){
+  bCtx.clearRect(0,0,bCanvas.width,bCanvas.height);
+  bParticles.forEach((p,i)=>{
+    p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;
+    if(p.life<=0||p.y<-10){bParticles[i]=bSpawnP();return;}
+    bCtx.save();bCtx.globalAlpha=p.alpha*p.life;bCtx.fillStyle=p.color;
+    bCtx.beginPath();bCtx.arc(p.x,p.y,p.r,0,Math.PI*2);bCtx.fill();bCtx.restore();
+  });
+  bPFrame=requestAnimationFrame(bDrawP);
+}
+bDrawP();
+
+const bSvg   = document.getElementById('boot-copie-svg');
+const bFace  = document.getElementById('b-face');
+const bSpark = document.getElementById('b-sparkles');
+const bEyeL  = document.getElementById('b-eye-l');
+const bEyeR  = document.getElementById('b-eye-r');
+const bootSig  = document.getElementById('boot-sig');
+const bootText = document.getElementById('boot-text');
+
+function bBlink(){bEyeL.setAttribute('ry','0.8');bEyeR.setAttribute('ry','0.8');setTimeout(()=>{bEyeL.setAttribute('ry','4');bEyeR.setAttribute('ry','4');},110);}
+function bSparkle(){bFace.style.opacity='0';bSpark.style.opacity='1';setTimeout(()=>{bSpark.style.opacity='0';bFace.style.opacity='1';},700);}
+
+function drawMoon(cx,cy,r,phase,glowA){
+  bCtx.save();
+  const g=bCtx.createRadialGradient(cx,cy,r*0.3,cx,cy,r*1.8);
+  g.addColorStop(0,`rgba(255,179,0,${glowA*0.6})`);g.addColorStop(0.5,`rgba(255,140,0,${glowA*0.2})`);g.addColorStop(1,'rgba(255,100,0,0)');
+  bCtx.beginPath();bCtx.arc(cx,cy,r*1.8,0,Math.PI*2);bCtx.fillStyle=g;bCtx.fill();bCtx.restore();
+  bCtx.save();
+  const bg=bCtx.createRadialGradient(cx-r*.25,cy-r*.25,r*.1,cx,cy,r);
+  bg.addColorStop(0,'#ffe97a');bg.addColorStop(0.45,'#ffb300');bg.addColorStop(1,'#c04a00');
+  bCtx.save();
+  bCtx.beginPath();bCtx.arc(cx,cy,r,0,Math.PI*2);bCtx.clip();
+  bCtx.fillStyle=bg;bCtx.fill();
+  const sg=bCtx.createRadialGradient(cx-r*.2,cy-r*.2,0,cx,cy,r*.7);
+  sg.addColorStop(0,'rgba(255,255,220,0.45)');sg.addColorStop(1,'rgba(255,255,220,0)');
+  bCtx.fillStyle=sg;bCtx.fill();
+  if(phase<0.98){
+    const cx2=cx+r*(1.0-phase*2.2);const cr=r*(0.98+phase*0.04);
+    bCtx.globalCompositeOperation='destination-out';
+    bCtx.beginPath();bCtx.arc(cx2,cy,cr,0,Math.PI*2);bCtx.fillStyle='rgba(0,0,0,1)';bCtx.fill();
+    bCtx.globalCompositeOperation='source-over';
+  }
+  bCtx.restore();bCtx.restore();
+}
+
+function drawStars(cx,cy,oR,angle,count,alpha){
+  for(let i=0;i<count;i++){
+    const a=angle+(i/count)*Math.PI*2;
+    const sx=cx+Math.cos(a)*oR,sy=cy+Math.sin(a)*oR;
+    const sz=3+Math.sin(angle*3+i)*1.2;
+    bCtx.save();bCtx.globalAlpha=alpha*(0.7+0.3*Math.sin(angle*4+i*1.3));
+    bCtx.fillStyle=i%2===0?'#ffb300':'#ffe566';
+    bCtx.translate(sx,sy);bCtx.rotate(angle*.5+i);
+    bCtx.beginPath();
+    for(let p=0;p<4;p++){const pa=(p/4)*Math.PI*2-Math.PI/4,pb=pa+Math.PI/4;bCtx.lineTo(Math.cos(pa)*sz,Math.sin(pa)*sz);bCtx.lineTo(Math.cos(pb)*sz*.35,Math.sin(pb)*sz*.35);}
+    bCtx.closePath();bCtx.fill();bCtx.restore();
+  }
+}
+
+function moonBirth(){
+  return new Promise(resolve=>{
+    bSvg.style.opacity='0';
+    const W=bCanvas.width,H=bCanvas.height;
+    const cx=W/2,cy=H/2-H*0.06;
+    const TOTAL=5000,start=performance.now();
+    let bp=0;
+    cancelAnimationFrame(bPFrame);
+    function frame(now){
+      const t=Math.min((now-start)/TOTAL,1);
+      bCtx.clearRect(0,0,W,H);
+      bParticles.forEach(p=>{bCtx.save();bCtx.globalAlpha=p.alpha*p.life;bCtx.fillStyle=p.color;bCtx.beginPath();bCtx.arc(p.x,p.y,p.r,0,Math.PI*2);bCtx.fill();bCtx.restore();});
+      const maxR=Math.min(W,H)*0.27;bp+=0.09;
+      let mp,mr,ga,sa,oa,or2;
+      if(t<0.08){const lt=t/0.08;mp=lt*.05;mr=maxR*(.1+lt*.35)*(1+Math.sin(bp)*.07*lt);ga=lt*.5;sa=0;oa=0;or2=0;}
+      else if(t<0.30){const lt=(t-.08)/.22;mp=.05+lt*.20;mr=maxR*(.45+lt*.15)*(1+Math.sin(bp)*.06);ga=.5+lt*.2;sa=lt*.4;oa=lt*Math.PI*.8;or2=mr*(1.5+lt*.2);}
+      else if(t<0.55){const lt=(t-.30)/.25;mp=.25+lt*.25;mr=maxR*(.60+lt*.15)*(1+Math.sin(bp)*.055);ga=.7+lt*.15;sa=.4+lt*.3;oa=.8*Math.PI+lt*Math.PI*.7;or2=mr*1.55;}
+      else if(t<0.78){const lt=(t-.55)/.23;mp=.5+lt*.35;mr=maxR*(.75+lt*.20)*(1+Math.sin(bp)*.045);ga=.85+lt*.1;sa=.7+lt*.25;oa=1.5*Math.PI+lt*Math.PI*.7;or2=mr*1.5;}
+      else if(t<0.92){const lt=(t-.78)/.14;mp=.85+lt*.15;const b=Math.sin(lt*Math.PI*2.5)*.08*(1-lt);mr=maxR*(.95+b)*(1+Math.sin(bp)*.03);ga=.95;sa=1.0-lt*.6;oa=2.2*Math.PI+lt*Math.PI*.8;or2=mr*1.48;}
+      else{const lt=(t-.92)/.08;mp=1.0;mr=maxR*.95;ga=.95*(1-lt);sa=0;oa=0;or2=0;bSvg.style.transition='opacity 0.4s ease';bSvg.style.opacity=String(lt);}
+      drawMoon(cx,cy,mr,mp,ga);
+      if(sa>0)drawStars(cx,cy,or2,oa,5,sa);
+      bParticles.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.life-=p.decay;if(p.life<=0||p.y<-10){bParticles[i]=bSpawnP();bParticles[i].y=H+5;}});
+      if(t<1){bPFrame=requestAnimationFrame(frame);}
+      else{bCtx.clearRect(0,0,W,H);bSvg.style.opacity='1';bSvg.style.transition='';bDrawP();resolve();}
+    }
+    bPFrame=requestAnimationFrame(frame);
+  });
+}
+
+function typeB(text,speed=40){
+  return new Promise(resolve=>{
+    bootText.innerHTML='<span class="cur"></span>';
+    bootText.classList.add('show');
+    let i=0;
+    function n(){
+      if(i>=text.length){resolve();return;}
+      const cur=bootText.querySelector('.cur');const s=document.createElement('span');s.textContent=text[i];
+      bootText.insertBefore(s,cur);i++;setTimeout(n,speed+(Math.random()*16-8));
+    }
+    n();
+  });
+}
+function clearB(d=0){return new Promise(r=>setTimeout(()=>{bootText.innerHTML='<span class="cur"></span>';r();},d));}
+
+async function runBoot(){
+  bSvg.style.opacity='0';
+  bootSig.classList.add('show');
+  await moonBirth();
+  bEyeL.setAttribute('ry','0.5');bEyeR.setAttribute('ry','0.5');
+  await waitMs(160);
+  bEyeL.setAttribute('ry','2');bEyeR.setAttribute('ry','2');
+  await waitMs(180);
+  bEyeL.setAttribute('ry','4');bEyeR.setAttribute('ry','4');
+  await waitMs(200);
+  bSparkle();
+  await waitMs(300);
+  await typeB('COPIE ONLINE',55);
+  await waitMs(600);
+  await clearB(100);
+  await typeB('initializing oral exam module.',42);
+  await waitMs(800);
+  await clearB(100);
+  await typeB('case management // midterm + oral practice.',38);
+  await waitMs(900);
+  await clearB(100);
+  await typeB('preparing broadcast.',42);
+  await waitMs(800);
+  await clearB(200);
+
+  const overlay=document.getElementById('boot-overlay');
+  overlay.classList.add('gone');
+  await waitMs(600);
+  document.getElementById('host-overlay').classList.add('show');
+  await waitMs(400);
+  runHostIntro();
+}
+
+// ═══════════════════════════════════════
+// TIMED INTERRUPT ENGINE
+// ═══════════════════════════════════════
+
+// Questions with multiple-choice options for the interrupt (all from screenshots)
+const INTERRUPT_QUESTIONS = [
+  {
+    q: "Which of the following is NOT part of a person's social history?",
+    opts: [
+      "Background information about the person's life, including background related to the presenting problem.",
+      "The worker's impressions and recommendations.",
+      "The changes the person wants to make to resolve their presenting problem.",
+      "A description and history of the presenting problem."
+    ],
+    correct: 2
+  },
+  {
+    q: "The purpose of the first interview is to begin the assessment process. Which information is NOT obtained in the interview?",
+    opts: ["Strengths", "Weaknesses", "Past problems", "Current problems that caused the person to seek help"],
+    correct: 2
+  },
+  {
+    q: "Which of the following is NOT observed during the mental status examination?",
+    opts: ["General appearance", "Personality", "Thought content and process", "Affect"],
+    correct: 1
+  },
+  {
+    q: "A __________ contains broad, general goals for the case management unit to follow regarding a particular person.",
+    opts: ["personal plan", "needs plan", "assessment plan", "service plan"],
+    correct: 3
+  },
+  {
+    q: "In the __________ Stage of Change, people are not thinking about change and are not ready to change.",
+    opts: ["Contemplation", "Implementing the plan", "Developing a plan", "Precontemplation"],
+    correct: 3
+  },
+  {
+    q: "In the __________ Stage of Change, the person is willing to explore but not yet willing to commit to change.",
+    opts: ["Contemplation", "Developing a plan", "Implementing the plan", "Precontemplation"],
+    correct: 0
+  },
+  {
+    q: "In which Stage of Change does the person seek to make the changes a permanent part of their life?",
+    opts: ["Contemplation", "Maintaining the changes", "Implementing the plan", "Developing a plan"],
+    correct: 1
+  },
+  {
+    q: "In which Stage of Change is the person ready for change but needs a plan?",
+    opts: ["Developing a plan", "Implementing the plan", "Contemplation", "Precontemplation"],
+    correct: 0
+  },
+  {
+    q: "The five Stages of Change include precontemplation, contemplation, developing a plan, implementing the plan, and maintaining the changes.",
+    opts: ["True", "False"],
+    correct: 0
+  },
+  {
+    q: "Regarding the Stages of Change, implementing the plan occurs when people change their thinking, behavior, or old habits.",
+    opts: ["True", "False"],
+    correct: 0
+  },
+  {
+    q: "When a client becomes angry you should become defensive and argue your point.",
+    opts: ["True", "False"],
+    correct: 1
+  },
+  {
+    q: "An invitation to collaborate is one of the four parts of an I-message.",
+    opts: ["True", "False"],
+    correct: 0
+  },
+  {
+    q: "The __________ is a collection of diagnoses of mental disorders accompanied by the typical behaviors and symptoms.",
+    opts: ["Psychiatric Diagnosis and Classification", "Handbook of Differential Diagnosis", "Clinician's Guide to Diagnosis", "Diagnostic and Statistical Manual of Mental Disorders"],
+    correct: 3
+  },
+  {
+    q: "The DSM-IV-TR is the newest version of the DSM in use and was developed in 2013.",
+    opts: ["True", "False"],
+    correct: 1
+  },
+  {
+    q: "The mental status examination is based on your observations of the client — how they act, talk, and look while in your presence.",
+    opts: ["True", "False"],
+    correct: 0
+  },
+  {
+    q: "When meeting the client, it is NOT necessary to explain confidentiality and its limits.",
+    opts: ["True", "False"],
+    correct: 1
+  },
+  {
+    q: "Barriers can prevent case managers from fully understanding and helping clients. Which of the following is NOT a common barrier for a client?",
+    opts: ["Language", "Education", "Culture", "Intellectual disability"],
+    correct: 1
+  },
+  {
+    q: "Which of the following is NOT a reason for anger?",
+    opts: ["The client is fearful.", "The client has an aggressive personality trait.", "The client feels overwhelmed.", "The client is angry about something you said or done."],
+    correct: 1
+  },
+  {
+    q: "Which of the following is a reason for DISARMING anger?",
+    opts: ["Enables the client to understand the problem.", "Focuses the work on calming the client.", "Allows you to practice empathy.", "Helps the client to hear your message."],
+    correct: 2
+  },
+  {
+    q: "What are the 4 steps of case management?",
+    opts: ["Assess, Plan, Connect, Monitor", "Assessment, Planning, Linking, Monitoring", "Intake, Plan, Refer, Close", "Evaluate, Plan, Link, Measure"],
+    correct: 1
+  },
+  {
+    q: "What are the 3 core helping attitudes?",
+    opts: ["Agreeableness, Empathy, Warmth", "Warmth, Genuineness, Empathy", "Honesty, Empathy, Compassion", "Respect, Warmth, Reliability"],
+    correct: 1
+  },
+  {
+    q: "What are the 3 requirements for valid informed consent?",
+    opts: ["Capacity, Comprehension, Voluntariness", "Knowledge, Willingness, Capacity", "Understanding, Agreement, Presence", "Consent, Clarity, Freedom"],
+    correct: 0
+  },
+  {
+    q: "What is the correct escalation chain that starts with stereotypes?",
+    opts: ["Stereotypes → Prejudice → Ethnocentrism → Conflict", "Stereotypes → Ethnocentrism → Prejudice → Conflict", "Ethnocentrism → Stereotypes → Prejudice → Conflict", "Prejudice → Stereotypes → Conflict → Ethnocentrism"],
+    correct: 1
+  },
+  {
+    q: "The 4 parts of a complete I-Message are:",
+    opts: [
+      "Feeling + Observation (non-blaming) + Tangible effect + Invitation to collaborate",
+      "Feeling + Accusation + Consequence + Demand",
+      "Observation + Feeling + Request + Consequence",
+      "Fact + Feeling + Effect + Solution"
+    ],
+    correct: 0
+  },
+  {
+    q: "What are the 5 reasons for termination?",
+    opts: [
+      "Mutual agreement / Client dies or moves / Funding ends / Client doesn't want services / Client disappears",
+      "Goals met / Time limit / Referral / Hospitalization / Funding",
+      "Client request / Worker request / Funding / Goals met / Transfer",
+      "Discharge / Non-compliance / Funding ends / Crisis / Completion"
+    ],
+    correct: 0
+  }
+];
+
+// ── Interrupt State ──
+let interruptTimer = null;
+let interruptCountdownTimer = null;
+let interruptActive = false;
+let interruptSecondsLeft = 0;
+const INTERRUPT_INTERVAL_MIN = 5 * 60 * 1000;   // 5 min
+const INTERRUPT_INTERVAL_MAX = 15 * 60 * 1000;  // 15 min
+const ANSWER_WINDOW_SECONDS = 45;
+let usedInterruptIdxs = [];
+let interruptAnswered = false;
+let interruptCorrectIdx = -1;
+
+function scheduleNextInterrupt() {
+  if (interruptTimer) clearTimeout(interruptTimer);
+  const delay = INTERRUPT_INTERVAL_MIN + Math.random() * (INTERRUPT_INTERVAL_MAX - INTERRUPT_INTERVAL_MIN);
+  interruptTimer = setTimeout(triggerInterrupt, delay);
+}
+
+function pickInterruptQuestion() {
+  if (usedInterruptIdxs.length >= INTERRUPT_QUESTIONS.length) usedInterruptIdxs = [];
+  let idx;
+  do { idx = Math.floor(Math.random() * INTERRUPT_QUESTIONS.length); }
+  while (usedInterruptIdxs.includes(idx));
+  usedInterruptIdxs.push(idx);
+  return INTERRUPT_QUESTIONS[idx];
+}
+
+// ── Reverse boot: moon collapses, then interrupt shows ──
+function moonCollapse() {
+  return new Promise(resolve => {
+    const W = bCanvas.width, H = bCanvas.height;
+    const cx = W/2, cy = H/2 - H*0.06;
+    const TOTAL = 2800, start = performance.now();
+    let bp = 0;
+    cancelAnimationFrame(bPFrame);
+    function frame(now) {
+      const t = Math.min((now - start) / TOTAL, 1);
+      bCtx.clearRect(0, 0, W, H);
+      bParticles.forEach(p => { bCtx.save(); bCtx.globalAlpha=p.alpha*p.life; bCtx.fillStyle=p.color; bCtx.beginPath(); bCtx.arc(p.x,p.y,p.r,0,Math.PI*2); bCtx.fill(); bCtx.restore(); });
+      const maxR = Math.min(W, H) * 0.27;
+      bp += 0.09;
+      // t=0 → full moon; t=1 → nothing. Reverse of moonBirth last phases
+      const rt = 1 - t; // reversed time
+      let mp, mr, ga, sa, oa, or2;
+      if (rt > 0.22) {
+        const lt = (rt - 0.22) / 0.78;
+        mp = 0.5 + lt * 0.5; mr = maxR * (0.6 + lt * 0.35) * (1 + Math.sin(bp) * 0.04);
+        ga = 0.5 + lt * 0.45; sa = lt * 0.5; oa = bp * 0.5; or2 = mr * 1.5;
+      } else if (rt > 0.08) {
+        const lt = (rt - 0.08) / 0.14;
+        mp = lt * 0.5; mr = maxR * (0.2 + lt * 0.4) * (1 + Math.sin(bp) * 0.06);
+        ga = lt * 0.5; sa = lt * 0.2; oa = bp * 0.3; or2 = mr * 1.4;
+      } else {
+        const lt = rt / 0.08;
+        mp = 0; mr = maxR * 0.2 * lt; ga = lt * 0.2; sa = 0; oa = 0; or2 = 0;
+      }
+      drawMoon(cx, cy, Math.max(mr, 1), mp, ga);
+      if (sa > 0) drawStars(cx, cy, or2, oa, 5, sa);
+      bParticles.forEach((p, i) => { p.x+=p.vx; p.y+=p.vy; p.life-=p.decay; if(p.life<=0||p.y<-10){bParticles[i]=bSpawnP();bParticles[i].y=H+5;} });
+      if (t < 1) { bPFrame = requestAnimationFrame(frame); }
+      else { bCtx.clearRect(0, 0, W, H); bDrawP(); resolve(); }
+    }
+    bPFrame = requestAnimationFrame(frame);
+  });
+}
+
+async function runInterruptBoot(callback) {
+  // Show the boot overlay over the app
+  const overlay = document.getElementById('boot-overlay');
+  bSvg.style.opacity = '1';
+  bootSig.classList.add('show');
+  bootText.innerHTML = '<span class="cur"></span>';
+  bootText.classList.add('show');
+  overlay.style.opacity = '1';
+  overlay.classList.remove('gone');
+
+  // Typewriter lines (reverse flavour)
+  await typeB('interrupt incoming.', 48);
+  await waitMs(500);
+  await clearB(80);
+  await typeB('scheduled check-in // oral exam module.', 36);
+  await waitMs(700);
+  await clearB(80);
+  await typeB('answer correctly to resume.', 42);
+  await waitMs(600);
+  await clearB(150);
+
+  // Blink eyes shut
+  bEyeL.setAttribute('ry','0.5'); bEyeR.setAttribute('ry','0.5');
+  await waitMs(120);
+  bEyeL.setAttribute('ry','0'); bEyeR.setAttribute('ry','0');
+  await waitMs(200);
+
+  // Moon collapses
+  bSvg.style.transition = 'opacity 0.3s ease';
+  bSvg.style.opacity = '0';
+  await moonCollapse();
+  await waitMs(200);
+
+  // Fade out boot overlay
+  overlay.style.transition = 'opacity 0.5s ease';
+  overlay.style.opacity = '0';
+  await waitMs(550);
+  overlay.classList.add('gone');
+  overlay.style.opacity = '';
+  overlay.style.transition = '';
+  bSvg.style.transition = '';
+
+  callback();
+}
+
+function triggerInterrupt() {
+  if (interruptActive) return;
+  interruptActive = true;
+  interruptAnswered = false;
+
+  const iq = pickInterruptQuestion();
+  interruptCorrectIdx = iq.correct;
+
+  // Run reverse boot first, then show question
+  runInterruptBoot(() => {
+    // Render question
+    const qtEl = document.getElementById('interrupt-q-text');
+    qtEl.textContent = iq.q;
+
+    const optsEl = document.getElementById('interrupt-options');
+    optsEl.innerHTML = '';
+    iq.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'i-opt';
+      btn.textContent = (iq.opts.length > 2 ? String.fromCharCode(65+i)+') ' : '') + opt;
+      btn.onclick = () => handleInterruptAnswer(i, iq.opts.length);
+      optsEl.appendChild(btn);
+    });
+
+    document.getElementById('interrupt-feedback').textContent = '';
+    document.getElementById('interrupt-overlay').classList.add('show');
+
+    // Start countdown
+    interruptSecondsLeft = ANSWER_WINDOW_SECONDS;
+    updateTimerRing(ANSWER_WINDOW_SECONDS, ANSWER_WINDOW_SECONDS);
+    interruptCountdownTimer = setInterval(() => {
+      interruptSecondsLeft--;
+      updateTimerRing(interruptSecondsLeft, ANSWER_WINDOW_SECONDS);
+      if (interruptSecondsLeft <= 0) {
+        clearInterval(interruptCountdownTimer);
+        if (!interruptAnswered) handleInterruptAnswer(-1, iq.opts.length); // timeout = miss
+      }
+    }, 1000);
+  });
+}
+
+function updateTimerRing(remaining, total) {
+  const circumference = 113; // 2πr where r=18
+  const fill = document.getElementById('timer-ring-fill');
+  const text = document.getElementById('timer-ring-text');
+  const pct = remaining / total;
+  fill.style.strokeDashoffset = circumference * (1 - pct);
+  fill.style.stroke = remaining <= 10 ? '#c0006e' : 'var(--amber)';
+  text.textContent = remaining > 0 ? remaining : '0';
+}
+
+function handleInterruptAnswer(selectedIdx, numOpts) {
+  if (interruptAnswered) return;
+  interruptAnswered = true;
+  clearInterval(interruptCountdownTimer);
+
+  const opts = document.querySelectorAll('.i-opt');
+  const correct = interruptCorrectIdx;
+  const isCorrect = selectedIdx === correct;
+
+  // Reveal correct/wrong state
+  opts.forEach((btn, i) => {
+    if (i === correct) btn.classList.add('reveal-correct');
+    else if (i === selectedIdx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('interrupt-feedback');
+  if (isCorrect) {
+    fb.style.color = 'var(--green-text)';
+    fb.textContent = '✓ Correct. Continuing session.';
+    setTimeout(() => {
+      document.getElementById('interrupt-overlay').classList.remove('show');
+      interruptActive = false;
+      scheduleNextInterrupt();
+    }, 1800);
+  } else {
+    fb.style.color = '#f0c8c8';
+    fb.textContent = selectedIdx === -1 ? 'Time expired.' : 'Wrong.';
+    setTimeout(() => {
+      document.getElementById('interrupt-overlay').classList.remove('show');
+      triggerAgain();
+    }, 1200);
+  }
+}
+
+function triggerAgain() {
+  const screen = document.getElementById('again-screen');
+  const word = document.getElementById('again-word');
+  screen.classList.add('show');
+  // Re-trigger animation
+  word.style.animation = 'none';
+  word.offsetHeight; // reflow
+  word.style.animation = '';
+
+  setTimeout(() => {
+    screen.classList.remove('show');
+    // Hard reset the main quiz
+    filterMode = 'all';
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    const allBtn = document.querySelector('.filter-btn');
+    if (allBtn) allBtn.classList.add('active');
+    buildDeck('all');
+    currentIdx = 0; revealed = false; scored = false;
+    sessionDone = false; gotCount = 0; missCount = 0; weakPoints = [];
+    render();
+    interruptActive = false;
+    scheduleNextInterrupt();
+  }, 2800);
+}
+
+// Hook startSession to also start interrupt scheduling
+function startSession() {
+  document.getElementById('host-overlay').classList.remove('show');
+  document.getElementById('app').classList.add('show');
+  buildDeck('all');
+  render();
+  scheduleNextInterrupt();
+}
+
+document.fonts.ready.then(()=>runBoot());
+</script>
+</body>
+</html>
